@@ -46,8 +46,11 @@ export function useData() {
   const saveData = useCallback((newData: AppData) => {
     if (user) {
       try {
-        localStorage.setItem(storageKey, JSON.stringify(newData));
-        setData(newData);
+        // Ensure transactions are sorted by date descending before saving
+        const sortedTransactions = newData.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const dataToSave = { ...newData, transactions: sortedTransactions };
+        localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+        setData(dataToSave);
       } catch (error) {
         console.error("Failed to save data to localStorage", error);
       }
@@ -62,6 +65,14 @@ export function useData() {
     const newData = {
       ...data,
       transactions: [newTransaction, ...data.transactions],
+    };
+    saveData(newData);
+  }, [data, saveData]);
+  
+  const updateTransaction = useCallback((transaction: Transaction) => {
+    const newData = {
+      ...data,
+      transactions: data.transactions.map(t => t.id === transaction.id ? transaction : t),
     };
     saveData(newData);
   }, [data, saveData]);
@@ -88,5 +99,5 @@ export function useData() {
   }, [data, saveData]);
 
 
-  return { data, loading, addTransaction, deleteTransaction, addCategory };
+  return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory };
 }

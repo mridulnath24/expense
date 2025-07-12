@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,6 +32,7 @@ import { format } from 'date-fns';
 import { useData } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
 import { suggestExpenseCategory } from '@/ai/flows/suggest-expense-category';
+import { type Transaction } from '@/lib/types';
 
 const formSchema = z.object({
   type: z.enum(['income', 'expense']),
@@ -46,13 +47,15 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  transaction?: Transaction | null;
 }
 
-export function AddTransactionDialog({ open, onOpenChange, children }: AddTransactionDialogProps) {
-  const { data, addTransaction, addCategory } = useData();
+export function AddTransactionDialog({ open, onOpenChange, children, transaction }: AddTransactionDialogProps) {
+  const { data, addTransaction, updateTransaction, addCategory } = useData();
   const { toast } = useToast();
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const isEditMode = !!transaction;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -64,6 +67,24 @@ export function AddTransactionDialog({ open, onOpenChange, children }: AddTransa
       date: new Date(),
     },
   });
+  
+  useEffect(() => {
+    if (transaction) {
+      form.reset({
+        ...transaction,
+        date: new Date(transaction.date)
+      });
+    } else {
+      form.reset({
+        type: 'expense',
+        amount: 0,
+        description: '',
+        category: '',
+        date: new Date(),
+      });
+    }
+  }, [transaction, form, open]);
+
 
   const transactionType = form.watch('type');
 
@@ -109,26 +130,43 @@ export function AddTransactionDialog({ open, onOpenChange, children }: AddTransa
 
 
   const onSubmit = (values: FormValues) => {
-    addTransaction({
-      ...values,
-      date: values.date.toISOString(),
-    });
-    toast({
-      title: 'Transaction Added',
-      description: 'Your transaction has been successfully recorded.',
-    });
+    if (isEditMode && transaction) {
+       updateTransaction({
+        ...transaction,
+        ...values,
+        date: values.date.toISOString(),
+      });
+      toast({
+        title: 'Transaction Updated',
+        description: 'Your transaction has been successfully updated.',
+      });
+    } else {
+      addTransaction({
+        ...values,
+        date: values.date.toISOString(),
+      });
+      toast({
+        title: 'Transaction Added',
+        description: 'Your transaction has been successfully recorded.',
+      });
+    }
+
     onOpenChange(false);
-    form.reset();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      onOpenChange(isOpen);
+      if (!isOpen) {
+        form.reset();
+      }
+    }}>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>Add New Transaction</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Transaction' : 'Add New Transaction'}</DialogTitle>
           <DialogDescription>
-            Enter the details of your income or expense below.
+            {isEditMode ? 'Update the details of your transaction.' : 'Enter the details of your income or expense below.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -139,7 +177,7 @@ export function AddTransactionDialog({ open, onOpenChange, children }: AddTransa
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
@@ -253,7 +291,7 @@ export function AddTransactionDialog({ open, onOpenChange, children }: AddTransa
             <DialogFooter>
               <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                Add Transaction
+                {isEditMode ? 'Save Changes' : 'Add Transaction'}
               </Button>
             </DialogFooter>
           </form>
