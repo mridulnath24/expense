@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MonthlySummaryCards } from '@/components/dashboard/monthly-summary-cards';
 import { Separator } from '@/components/ui/separator';
 import { IncomeExpenseChart } from '@/components/dashboard/income-expense-chart';
+import { ExpenseByCategoryChart } from '@/components/dashboard/expense-by-category-chart';
 
 export default function DashboardPage() {
   const { data, loading } = useData();
@@ -28,7 +29,10 @@ export default function DashboardPage() {
            </div>
         </div>
         <Skeleton className="h-96 w-full" />
-        <Skeleton className="h-96 w-full" />
+        <div className="grid gap-8 md:grid-cols-2">
+          <Skeleton className="h-96 w-full" />
+          <Skeleton className="h-96 w-full" />
+        </div>
       </div>
     );
   }
@@ -38,7 +42,10 @@ export default function DashboardPage() {
       <SummaryCards transactions={data.transactions} />
       <Separator />
       <MonthlySummaryCards transactions={data.transactions} />
-      <IncomeExpenseChart transactions={data.transactions} />
+      <div className="grid gap-8 lg:grid-cols-2">
+        <IncomeExpenseChart transactions={data.transactions} />
+        <ExpenseByCategoryChart transactions={data.transactions} />
+      </div>
       <RecentTransactions transactions={data.transactions.slice(0, 10)} />
     </div>
   );

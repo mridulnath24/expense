@@ -1,11 +1,11 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { type Transaction } from '@/lib/types';
-import { format, subDays, isAfter, startOfDay } from 'date-fns';
+import { format, subDays, isAfter } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import { TrendingUp } from 'lucide-react';
 
@@ -49,7 +49,7 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Income vs. Expense (Last 30 Days)</CardTitle>
+        <CardTitle>Income vs. Expense</CardTitle>
         <CardDescription>
           A visual overview of your income and expenses over the past 30 days.
         </CardDescription>
@@ -87,6 +87,7 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
                             if (active && payload && payload.length) {
                             return (
                                 <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                <p className="font-bold">{payload[0].payload.date}</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="flex flex-col">
                                     <span className="text-[0.70rem] uppercase text-muted-foreground">
@@ -111,6 +112,7 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
                             return null;
                         }}
                     />
+                    <Legend wrapperStyle={{fontSize: '0.8rem'}}/>
                     <Area type="monotone" dataKey="income" stackId="1" stroke="hsl(var(--chart-1))" fill="hsl(var(--chart-1))" fillOpacity={0.4} />
                     <Area type="monotone" dataKey="expense" stackId="1" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.4} />
                 </AreaChart>
