@@ -12,6 +12,7 @@ const firebaseConfig: FirebaseOptions = {
 
 let app: FirebaseApp | null = null;
 
+// This function is kept for other potential Firebase services, but auth is initialized in the provider.
 function getFirebaseApp(): FirebaseApp | null {
     if (typeof window === 'undefined') {
         // Return null on the server
