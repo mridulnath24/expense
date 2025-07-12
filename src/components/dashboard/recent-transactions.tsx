@@ -24,8 +24,8 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="hidden sm:table-cell">Category</TableHead>
+                <TableHead className="hidden md:table-cell">Date</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
               </TableRow>
             </TableHeader>
@@ -33,10 +33,10 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               {transactions.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium">{t.description}</TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <Badge variant="outline">{t.category}</Badge>
                   </TableCell>
-                  <TableCell>{format(new Date(t.date), 'PP')}</TableCell>
+                  <TableCell className="hidden md:table-cell">{format(new Date(t.date), 'PP')}</TableCell>
                   <TableCell
                     className={`text-right font-semibold ${
                       t.type === 'income' ? 'text-green-600' : 'text-red-600'
