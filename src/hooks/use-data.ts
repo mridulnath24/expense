@@ -8,7 +8,7 @@ const defaultData: AppData = {
   transactions: [],
   categories: {
     income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
-    expense: ['Food', 'Transport', 'Utilities', 'Entertainment', 'Health', 'Shopping', 'Other'],
+    expense: ['Food', 'Transport', 'Utilities', 'House Rent', 'Entertainment', 'Health', 'Shopping', 'Other'],
   },
 };
 
