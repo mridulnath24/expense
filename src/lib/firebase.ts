@@ -14,10 +14,10 @@ const firebaseConfig: FirebaseOptions = {
 };
 
 // Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = firebaseConfig.apiKey && !getApps().length ? initializeApp(firebaseConfig) : (getApps().length ? getApp() : null);
 
 // It's safer to get auth only when firebaseConfig.apiKey is present
-const auth = firebaseConfig.apiKey ? getAuth(app) : null;
+const auth = app ? getAuth(app) : null;
 
 
 export { app, auth };

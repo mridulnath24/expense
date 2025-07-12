@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!auth) {
-        console.error("Firebase Auth is not initialized. Please check your environment variables.");
+        console.error("Firebase Auth is not initialized. Please check your environment variables in the .env file.");
         setLoading(false);
         return;
     }
