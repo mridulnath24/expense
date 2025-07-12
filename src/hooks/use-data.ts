@@ -87,12 +87,15 @@ export function useData() {
       ...transaction,
       id: crypto.randomUUID(),
     };
-    const newData = {
-      ...data,
-      transactions: [newTransaction, ...data.transactions],
-    };
-    saveData(newData);
-  }, [data, saveData]);
+    setData((prevData) => {
+      const newData = {
+        ...prevData,
+        transactions: [newTransaction, ...prevData.transactions],
+      };
+      saveData(newData);
+      return newData;
+    });
+  }, [saveData]);
   
   const updateTransaction = useCallback((transaction: Transaction) => {
     const newData = {
