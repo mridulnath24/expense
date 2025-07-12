@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowDownCircle, ArrowUpCircle, TrendingUp } from 'lucide-react';
 import { type Transaction } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
-import { isSameMonth, startOfMonth } from 'date-fns';
+import { isSameMonth, format } from 'date-fns';
 
 interface MonthlySummaryCardsProps {
   transactions: Transaction[];
