@@ -30,8 +30,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// This function moves the Firebase initialization logic into the AuthProvider
-// to ensure it only runs on the client-side and after environment variables are loaded.
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 
@@ -44,20 +42,16 @@ const initializeFirebase = (): Auth | null => {
         return null;
     }
     
+    // WARNING: Hardcoding configuration is a security risk.
+    // It is strongly recommended to use environment variables.
     const firebaseConfig: FirebaseOptions = {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+      apiKey: "AIzaSyADF0r6skU1Hd1C2TfIR6zCYon05ITYlI4",
+      authDomain: "expense-tracker-app-1f50d.firebaseapp.com",
+      projectId: "expense-tracker-app-1f50d",
+      storageBucket: "expense-tracker-app-1f50d.appspot.com",
+      messagingSenderId: "935484828246",
+      appId: "1:935484828246:web:29e3f332c7d782e62a69f7",
     };
-
-    // This check is crucial. If the API key is missing, we don't initialize.
-    if (!firebaseConfig.apiKey) {
-        console.error("Firebase API Key is missing. Please check your .env file.");
-        return null;
-    }
 
     if (!getApps().length) {
         try {
@@ -84,14 +78,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initializedAuth = initializeFirebase();
-    setAuthInstance(initializedAuth);
+    if (initializedAuth) {
+        setAuthInstance(initializedAuth);
+    } else {
+        setLoading(false); // Stop loading if initialization fails
+    }
   }, []);
   
 
   useEffect(() => {
     if (!authInstance) {
-      // If auth is not initialized after the first effect, stop loading.
-      // The error screen will be displayed.
       if (loading) setLoading(false);
       return;
     }
@@ -102,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [authInstance]);
+  }, [authInstance, loading]);
 
   const signIn = (email: string, password: string) => {
     if (!authInstance) return Promise.reject(new Error("Firebase not initialized"));
@@ -157,14 +153,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
        <div className="flex h-screen w-full items-center justify-center bg-background p-4 text-center">
           <div className="max-w-md space-y-4">
-            <h1 className="text-2xl font-bold text-destructive">Firebase Configuration Error</h1>
+            <h1 className="text-2xl font-bold text-destructive">Firebase Initialization Failed</h1>
             <p className="text-muted-foreground">
-              The application could not connect to Firebase. Please ensure your 
-              <code className="mx-1 rounded bg-muted px-1.5 py-1 font-mono text-sm">.env</code> 
-              file is present in the project root and contains valid Firebase credentials prefixed with <code className="mx-1 rounded bg-muted px-1.5 py-1 font-mono text-sm">NEXT_PUBLIC_</code>.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              After creating or updating the <code className="mx-1 rounded bg-muted px-1.5 py-1 font-mono text-sm">.env</code> file, you must restart the development server.
+              The application could not connect to Firebase. This might be due to a network issue or an invalid configuration.
             </p>
           </div>
        </div>
