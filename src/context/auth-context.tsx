@@ -1,9 +1,11 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
 import {
   Auth,
   User,
+  getAuth,
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -13,8 +15,30 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
+
+// Centralized Firebase initialization
+let auth: Auth | null = null;
+
+try {
+  const firebaseConfig: FirebaseOptions = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  };
+
+  if (firebaseConfig.apiKey) {
+    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+  } else {
+    console.error("Firebase API Key is missing. Please check your .env file.");
+  }
+} catch (e) {
+    console.error("Firebase initialization error:", e);
+}
 
 
 interface AuthContextType {
