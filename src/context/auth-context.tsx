@@ -16,7 +16,6 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
-import { getFirebaseApp } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
