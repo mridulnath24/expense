@@ -23,9 +23,18 @@ export function useData() {
     if (user) {
       setLoading(true);
       try {
-        const storedData = localStorage.getItem(storageKey);
-        if (storedData) {
-          setData(JSON.parse(storedData));
+        const storedDataJSON = localStorage.getItem(storageKey);
+        if (storedDataJSON) {
+          const storedData = JSON.parse(storedDataJSON);
+          // Merge default categories with stored categories to ensure new categories are added
+          const mergedCategories = {
+            income: [...new Set([...defaultData.categories.income, ...(storedData.categories?.income || [])])],
+            expense: [...new Set([...defaultData.categories.expense, ...(storedData.categories?.expense || [])])],
+          };
+          const updatedData = { ...storedData, categories: mergedCategories };
+          setData(updatedData);
+          // Save the updated data back to localStorage
+          localStorage.setItem(storageKey, JSON.stringify(updatedData));
         } else {
           // Set default data for new user
           setData(defaultData);
