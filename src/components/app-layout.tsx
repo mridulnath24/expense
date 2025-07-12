@@ -76,14 +76,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               open={isDialogOpen}
               onOpenChange={setIsDialogOpen}
             >
-               <Button onClick={() => setIsDialogOpen(true)} className="sm:hidden" variant="default" size="icon">
-                <PlusCircle className="h-4 w-4" />
-                <span className="sr-only">New Transaction</span>
-              </Button>
-               <Button onClick={() => setIsDialogOpen(true)} className="hidden sm:inline-flex">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                <span>New Transaction</span>
-              </Button>
+              <span>
+                <Button onClick={() => setIsDialogOpen(true)} className="sm:hidden" variant="default" size="icon">
+                  <PlusCircle className="h-4 w-4" />
+                  <span className="sr-only">New Transaction</span>
+                </Button>
+                <Button onClick={() => setIsDialogOpen(true)} className="hidden sm:inline-flex">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  <span>New Transaction</span>
+                </Button>
+              </span>
             </AddTransactionDialog>
             <UserNav />
           </div>
