@@ -4,8 +4,8 @@ import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'SpendWise - Personal Expense Tracker',
-  description: 'Track your expenses and manage your finances with SpendWise.',
+  title: 'Expense Tracker - Personal Expense Tracker',
+  description: 'Track your expenses and manage your finances with Expense Tracker.',
 };
 
 export default function RootLayout({

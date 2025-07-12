@@ -9,7 +9,9 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  FacebookAuthProvider,
   signOut,
+  updateProfile,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
@@ -20,8 +22,9 @@ interface AuthContextType {
   username: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
   signInWithGoogle: () => Promise<any>;
+  signInWithFacebook: () => Promise<any>;
   logout: () => void;
 }
 
@@ -51,9 +54,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-  const signUp = (email: string, password: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     if (!auth) return Promise.reject(new Error("Firebase not initialized"));
-    return createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    await updateProfile(user, {
+        displayName: `${firstName} ${lastName}`,
+    });
+    // Manually update the user object after profile update
+    setUser({...user, displayName: `${firstName} ${lastName}`});
+    setUsername(`${firstName} ${lastName}`);
+    return userCredential;
   };
 
   const signInWithGoogle = () => {
@@ -62,16 +73,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return signInWithPopup(auth, provider);
   };
 
+  const signInWithFacebook = () => {
+    if (!auth) return Promise.reject(new Error("Firebase not initialized"));
+    const provider = new FacebookAuthProvider();
+    return signInWithPopup(auth, provider);
+  };
+
   const logout = () => {
     if (!auth) return;
     const currentUserId = user?.uid;
     // Clear user-specific data from local storage before signing out
     if (currentUserId) {
-        // The old key was based on username, so let's try to remove that too for migration
-        const oldKey = `spendwise_data_${username}`;
-        const newKey = `spendwise_data_${currentUserId}`;
-        localStorage.removeItem(oldKey);
-        localStorage.removeItem(newKey);
+        const key = `expense_tracker_data_${currentUserId}`;
+        localStorage.removeItem(key);
     }
     signOut(auth);
   };
@@ -85,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, username, loading, signIn, signUp, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, username, loading, signIn, signUp, signInWithGoogle, signInWithFacebook, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -29,7 +29,7 @@ export default function Logo({ className }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <title>SpendWise Logo</title>
+      <title>Expense Tracker Logo</title>
     </svg>
   );
 }

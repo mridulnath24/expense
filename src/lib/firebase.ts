@@ -14,24 +14,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app;
-if (!getApps().length) {
-    if (!firebaseConfig.apiKey) {
-        console.error("Firebase API Key is missing. Please check your .env file.");
-        app = null;
-    } else {
-        app = initializeApp(firebaseConfig);
-    }
-} else {
-    app = getApp();
-}
-
-const auth = app ? getAuth(app) : null;
-
-// Throw an error if auth is null to make it clear that Firebase is not configured
-if (!auth) {
-    throw new Error("Firebase is not configured. Please add your credentials to the .env file.");
-}
-
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
 
 export { app, auth };

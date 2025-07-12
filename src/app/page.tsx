@@ -20,13 +20,23 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
   );
 
+const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
+        <path fill="#039be5" d="M24 5A19 19 0 1 0 24 43A19 19 0 1 0 24 5Z"></path>
+        <path fill="#fff" d="M26.572,29.036h4.917l0.772-4.995h-5.69v-2.73c0-2.075,0.678-3.915,2.619-3.915h3.119v-4.359c-0.548-0.074-1.707-0.236-3.897-0.236c-4.573,0-7.254,2.415-7.254,7.917v3.323h-4.701v4.995h4.701v12.022c1.048,0.158,2.13,0.25,3.25,0.25c0.92,0,1.82-0.073,2.68-0.204V29.036z"></path>
+    </svg>
+);
+
+
 export default function AuthPage() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   
-  const { user, loading, signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, loading, signIn, signUp, signInWithGoogle, signInWithFacebook } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -36,17 +46,23 @@ export default function AuthPage() {
   }, [user, loading, router]);
 
   const handleAuthAction = async (action: 'signIn' | 'signUp') => {
-    if (!email.trim() || !password.trim()) {
-      setError('Email and password cannot be empty.');
-      return;
-    }
     setError('');
     setIsProcessing(true);
     try {
       if (action === 'signIn') {
+        if (!email.trim() || !password.trim()) {
+          setError('Email and password cannot be empty.');
+          setIsProcessing(false);
+          return;
+        }
         await signIn(email, password);
       } else {
-        await signUp(email, password);
+        if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim()) {
+          setError('Please fill in all fields.');
+          setIsProcessing(false);
+          return;
+        }
+        await signUp(email, password, firstName, lastName);
       }
       // Success will trigger useEffect and redirect
     } catch (err: any) {
@@ -61,6 +77,19 @@ export default function AuthPage() {
     setIsProcessing(true);
     try {
       await signInWithGoogle();
+      // Success will trigger useEffect and redirect
+    } catch (err: any) {
+      setError(err.message || 'An error occurred.');
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+  
+  const handleFacebookSignIn = async () => {
+    setError('');
+    setIsProcessing(true);
+    try {
+      await signInWithFacebook();
       // Success will trigger useEffect and redirect
     } catch (err: any) {
       setError(err.message || 'An error occurred.');
@@ -83,7 +112,7 @@ export default function AuthPage() {
       <div className="w-full max-w-sm">
         <div className="mx-auto mb-6 text-center">
             <Logo />
-            <h1 className="text-2xl font-bold mt-2">Welcome to SpendWise</h1>
+            <h1 className="text-2xl font-bold mt-2">Welcome to Expense Tracker</h1>
             <p className="text-muted-foreground">Sign in or create an account to continue</p>
         </div>
 
@@ -114,6 +143,16 @@ export default function AuthPage() {
           <TabsContent value="signup">
             <Card>
               <CardContent className="pt-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="signup-firstname">First Name</Label>
+                        <Input id="signup-firstname" placeholder="John" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="signup-lastname">Last Name</Label>
+                        <Input id="signup-lastname" placeholder="Doe" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                    </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input id="signup-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -141,10 +180,16 @@ export default function AuthPage() {
             </div>
         </div>
 
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isProcessing}>
-            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5"/>}
-            Google
-        </Button>
+        <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5"/>}
+                Google
+            </Button>
+             <Button variant="outline" className="w-full" onClick={handleFacebookSignIn} disabled={isProcessing}>
+                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FacebookIcon className="mr-2 h-5 w-5"/>}
+                Facebook
+            </Button>
+        </div>
 
       </div>
     </main>

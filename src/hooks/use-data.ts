@@ -33,7 +33,7 @@ export function useData() {
   const [data, setData] = useState<AppData>(defaultData);
   const [loading, setLoading] = useState(true);
 
-  const storageKey = user ? `spendwise_data_${user.uid}` : '';
+  const storageKey = user ? `expense_tracker_data_${user.uid}` : '';
 
   useEffect(() => {
     if (user && storageKey) {

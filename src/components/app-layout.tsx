@@ -30,7 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2">
             <Logo />
-            <span className="text-lg font-semibold">SpendWise</span>
+            <span className="text-lg font-semibold">Expense Tracker</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
