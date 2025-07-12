@@ -108,7 +108,7 @@ export default function AuthPage() {
   }
 
   return (
-    <main className="flex h-screen w-full items-center justify-center bg-background p-4">
+    <main className="flex min-h-screen w-full items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="mx-auto mb-6 text-center">
             <Logo />
@@ -143,7 +143,7 @@ export default function AuthPage() {
           <TabsContent value="signup">
             <Card>
               <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="signup-firstname">First Name</Label>
                         <Input id="signup-firstname" placeholder="John" value={firstName} onChange={(e) => setFirstName(e.target.value)} />

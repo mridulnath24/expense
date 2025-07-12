@@ -28,6 +28,7 @@ import { MoreHorizontal, Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
 import { useData } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
 import { AddTransactionDialog } from '../add-transaction-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -39,6 +40,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const isMobile = useIsMobile();
 
   const handleEditClick = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -61,6 +63,101 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
     setIsDeleteDialogOpen(false);
     setSelectedTransaction(null);
   };
+  
+  const renderMobileView = () => (
+    <div className="space-y-3">
+        {transactions.map(t => (
+            <Card key={t.id} className="p-4">
+                <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-1">
+                        <p className="font-medium">{t.description}</p>
+                        <p className="text-sm text-muted-foreground">{t.category}</p>
+                         <p className="text-sm text-muted-foreground">{format(new Date(t.date), 'PP')}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                         <p className={`font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                           {t.type === 'income' ? '+' : '-'}
+                           {formatCurrency(t.amount)}
+                        </p>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive focus:text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Delete</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+            </Card>
+        ))}
+    </div>
+  );
+
+  const renderDesktopView = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Description</TableHead>
+          <TableHead className="hidden sm:table-cell">Category</TableHead>
+          <TableHead className="hidden md:table-cell">Date</TableHead>
+          <TableHead className="text-right">Amount</TableHead>
+          <TableHead className="w-[40px]">
+            <span className="sr-only">Actions</span>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {transactions.map((t) => (
+          <TableRow key={t.id}>
+            <TableCell className="font-medium">{t.description}</TableCell>
+            <TableCell className="hidden sm:table-cell">
+              <Badge variant="outline">{t.category}</Badge>
+            </TableCell>
+            <TableCell className="hidden md:table-cell">{format(new Date(t.date), 'PP')}</TableCell>
+            <TableCell
+              className={`text-right font-semibold ${
+                t.type === 'income' ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              {t.type === 'income' ? '+' : '-'}
+              {formatCurrency(t.amount)}
+            </TableCell>
+            <TableCell>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    <span>Edit</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive focus:text-destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
 
   return (
     <>
@@ -70,58 +167,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
         </CardHeader>
         <CardContent>
           {transactions.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="hidden sm:table-cell">Category</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="w-[40px]">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium">{t.description}</TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Badge variant="outline">{t.category}</Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{format(new Date(t.date), 'PP')}</TableCell>
-                    <TableCell
-                      className={`text-right font-semibold ${
-                        t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {t.type === 'income' ? '+' : '-'}
-                      {formatCurrency(t.amount)}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditClick(t)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            <span>Edit</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive focus:text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Delete</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            isMobile ? renderMobileView() : renderDesktopView()
           ) : (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
               <div className="rounded-full bg-secondary p-4">

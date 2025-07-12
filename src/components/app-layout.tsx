@@ -71,13 +71,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
              </h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <AddTransactionDialog
               open={isDialogOpen}
               onOpenChange={setIsDialogOpen}
             >
-              <Button onClick={() => setIsDialogOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" /> New Transaction
+              <Button onClick={() => setIsDialogOpen(true)} size="sm" className="sm:size-auto">
+                <PlusCircle className="mr-0 sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">New Transaction</span>
               </Button>
             </AddTransactionDialog>
             <UserNav />
