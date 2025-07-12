@@ -6,6 +6,7 @@ import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MonthlySummaryCards } from '@/components/dashboard/monthly-summary-cards';
 import { Separator } from '@/components/ui/separator';
+import { IncomeExpenseChart } from '@/components/dashboard/income-expense-chart';
 
 export default function DashboardPage() {
   const { data, loading } = useData();
@@ -27,6 +28,7 @@ export default function DashboardPage() {
            </div>
         </div>
         <Skeleton className="h-96 w-full" />
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
@@ -36,6 +38,7 @@ export default function DashboardPage() {
       <SummaryCards transactions={data.transactions} />
       <Separator />
       <MonthlySummaryCards transactions={data.transactions} />
+      <IncomeExpenseChart transactions={data.transactions} />
       <RecentTransactions transactions={data.transactions.slice(0, 10)} />
     </div>
   );
