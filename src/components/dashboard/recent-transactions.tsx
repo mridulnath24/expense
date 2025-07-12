@@ -29,7 +29,6 @@ import { useData } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
 import { AddTransactionDialog } from '../add-transaction-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DialogTitle } from '@radix-ui/react-dialog';
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -186,10 +185,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         transaction={selectedTransaction}
-      >
-         {/* Visually hidden title for accessibility. */}
-        <DialogTitle className="sr-only">Edit Transaction</DialogTitle>
-      </AddTransactionDialog>
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
