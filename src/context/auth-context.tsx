@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
+import { initializeApp, getApps, getApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
 import {
   Auth,
   User,
@@ -16,30 +16,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
-
-// Centralized Firebase initialization
-let auth: Auth | null = null;
-
-try {
-  const firebaseConfig: FirebaseOptions = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  };
-
-  if (firebaseConfig.apiKey) {
-    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-  } else {
-    console.error("Firebase API Key is missing. Please check your .env file.");
-  }
-} catch (e) {
-    console.error("Firebase initialization error:", e);
-}
-
+import { getFirebaseApp } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -58,11 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const app = getFirebaseApp();
+  const auth = app ? getAuth(app) : null;
 
   useEffect(() => {
     if (!auth) {
-        console.error("Firebase Auth is not initialized. Please check your environment variables in the .env file.");
         setLoading(false);
+        // A console error will be shown from getFirebaseApp()
         return;
     }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -72,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   const signIn = (email: string, password: string) => {
     if (!auth) return Promise.reject(new Error("Firebase not initialized"));
@@ -121,6 +101,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
     );
+  }
+  
+  if (!auth) {
+    return (
+       <div className="flex h-screen w-full items-center justify-center bg-background p-4 text-center">
+          <div className="max-w-md space-y-4">
+            <h1 className="text-2xl font-bold text-destructive">Firebase Configuration Error</h1>
+            <p className="text-muted-foreground">
+              The application could not connect to Firebase. Please ensure your 
+              <code className="mx-1 rounded bg-muted px-1.5 py-1 font-mono text-sm">.env</code> 
+              file is present in the project root and contains valid Firebase credentials.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              After creating or updating the <code className="mx-1 rounded bg-muted px-1.5 py-1 font-mono text-sm">.env</code> file, you must restart the development server.
+            </p>
+          </div>
+       </div>
+    )
   }
 
   return (
