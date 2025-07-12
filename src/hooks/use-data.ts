@@ -33,10 +33,10 @@ export function useData() {
   const [data, setData] = useState<AppData>(defaultData);
   const [loading, setLoading] = useState(true);
 
-  const storageKey = user ? `spendwise_data_${user}` : '';
+  const storageKey = user ? `spendwise_data_${user.uid}` : '';
 
   useEffect(() => {
-    if (user) {
+    if (user && storageKey) {
       setLoading(true);
       try {
         const storedDataJSON = localStorage.getItem(storageKey);
@@ -49,8 +49,10 @@ export function useData() {
           };
           const updatedData = { ...storedData, categories: mergedCategories };
           setData(updatedData);
-          // Save the updated data back to localStorage
-          localStorage.setItem(storageKey, JSON.stringify(updatedData));
+          // Save the updated data back to localStorage if it was changed
+          if(JSON.stringify(updatedData) !== JSON.stringify(storedData)) {
+            localStorage.setItem(storageKey, JSON.stringify(updatedData));
+          }
         } else {
           // Set default data for new user
           setData(defaultData);
@@ -62,14 +64,14 @@ export function useData() {
       } finally {
         setLoading(false);
       }
-    } else {
+    } else if (!user) {
       setData(defaultData);
       setLoading(false);
     }
   }, [user, storageKey]);
 
   const saveData = useCallback((newData: AppData) => {
-    if (user) {
+    if (user && storageKey) {
       try {
         // Ensure transactions are sorted by date descending before saving
         const sortedTransactions = newData.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -98,33 +100,42 @@ export function useData() {
   }, [saveData]);
   
   const updateTransaction = useCallback((transaction: Transaction) => {
-    const newData = {
-      ...data,
-      transactions: data.transactions.map(t => t.id === transaction.id ? transaction : t),
-    };
-    saveData(newData);
-  }, [data, saveData]);
+    setData((prevData) => {
+      const newData = {
+        ...prevData,
+        transactions: prevData.transactions.map(t => t.id === transaction.id ? transaction : t),
+      };
+      saveData(newData);
+      return newData;
+    });
+  }, [saveData]);
 
   const deleteTransaction = useCallback((id: string) => {
-    const newData = {
-      ...data,
-      transactions: data.transactions.filter(t => t.id !== id),
-    };
-    saveData(newData);
-  }, [data, saveData]);
+     setData((prevData) => {
+      const newData = {
+        ...prevData,
+        transactions: prevData.transactions.filter(t => t.id !== id),
+      };
+      saveData(newData);
+      return newData;
+     });
+  }, [saveData]);
   
   const addCategory = useCallback((type: 'income' | 'expense', category: string) => {
-    if (data.categories[type].includes(category)) return;
+    setData((prevData) => {
+      if (prevData.categories[type].includes(category)) return prevData;
 
-    const newData = {
-      ...data,
-      categories: {
-        ...data.categories,
-        [type]: [...data.categories[type], category],
-      },
-    };
-    saveData(newData);
-  }, [data, saveData]);
+      const newData = {
+        ...prevData,
+        categories: {
+          ...prevData.categories,
+          [type]: [...prevData.categories[type], category],
+        },
+      };
+      saveData(newData);
+      return newData;
+    });
+  }, [saveData]);
 
 
   return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory };

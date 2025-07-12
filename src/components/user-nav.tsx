@@ -15,15 +15,15 @@ import { useAuth } from '@/context/auth-context';
 import { LogOut, User } from 'lucide-react';
 
 export function UserNav() {
-  const { user, logout } = useAuth();
-  const userInitial = user ? user.charAt(0).toUpperCase() : '?';
+  const { user, username, logout } = useAuth();
+  const userInitial = username ? username.charAt(0).toUpperCase() : '?';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border-2 border-primary/50">
-            <AvatarImage src={`https://placehold.co/100x100.png`} alt={user ?? ''} data-ai-hint="person avatar"/>
+            <AvatarImage src={user?.photoURL ?? ''} alt={username ?? ''} data-ai-hint="person avatar"/>
             <AvatarFallback>{userInitial}</AvatarFallback>
           </Avatar>
         </Button>
@@ -33,7 +33,7 @@ export function UserNav() {
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">Signed in as</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user}
+              {username}
             </p>
           </div>
         </DropdownMenuLabel>
