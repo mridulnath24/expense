@@ -49,22 +49,23 @@ export function useData() {
             income: [...new Set([...defaultData.categories.income, ...(fetchedData.categories?.income || [])])],
             expense: [...new Set([...defaultData.categories.expense, ...(fetchedData.categories?.expense || [])])],
           };
-          const sortedTransactions = fetchedData.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          const sortedTransactions = (fetchedData.transactions || []).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           const updatedData = { ...fetchedData, categories: mergedCategories, transactions: sortedTransactions };
           setData(updatedData);
         } else {
-          // Document doesn't exist, which shouldn't happen if auth context is correct
-          // but we can set default data as a fallback
+          // This case is handled by AuthProvider, which creates the document.
+          // We can set default data here as a fallback while the document is being created.
           setData(defaultData);
         }
         setLoading(false);
       }, (error) => {
          console.error("Firestore snapshot error:", error);
+         setData(defaultData); // Fallback to default data on error
          setLoading(false);
       });
 
     } else if (!user) {
-      // Not logged in, use default non-persistent data
+      // Not logged in, reset to default data and stop loading
       setData(defaultData);
       setLoading(false);
     }

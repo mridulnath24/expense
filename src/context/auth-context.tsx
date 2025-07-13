@@ -116,17 +116,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
   
   const handleUserAuth = async (user: User | null) => {
-    setUser(user);
+    setLoading(true);
     if (user && dbInstance) {
-        setUsername(user.displayName || user.email || null);
-        // Check if user has data in Firestore, if not, create it
-        const userDocRef = doc(dbInstance, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-            await setDoc(userDocRef, defaultData);
-        }
+      const userDocRef = doc(dbInstance, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, defaultData);
+      }
+      setUser(user);
+      setUsername(user.displayName || user.email || null);
     } else {
-        setUsername(null);
+      setUser(null);
+      setUsername(null);
     }
     setLoading(false);
   }
@@ -136,10 +137,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (loading) setLoading(false);
       return;
     }
-    const unsubscribe = onAuthStateChanged(authInstance, handleUserAuth);
+    const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+      handleUserAuth(user);
+    });
 
     return () => unsubscribe();
-  }, [authInstance, dbInstance, loading]);
+  }, [authInstance, dbInstance]);
 
   const signIn = (email: string, password: string) => {
     if (!authInstance) return Promise.reject(new Error("Firebase not initialized"));
@@ -153,9 +156,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await updateProfile(user, {
         displayName: `${firstName} ${lastName}`,
     });
-    
-    // Manually trigger user auth handling which creates the DB entry
-    await handleUserAuth(user);
+    // The onAuthStateChanged listener will handle creating the user document.
+    // We just need to update the user state locally for immediate feedback.
+    setUsername(`${firstName} ${lastName}`);
+    setUser(user);
 
     return userCredential;
   };
