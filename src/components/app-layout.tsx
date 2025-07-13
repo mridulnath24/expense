@@ -19,6 +19,7 @@ import { LayoutDashboard, LineChart, PlusCircle } from 'lucide-react';
 import Logo from './logo';
 import { UserNav } from './user-nav';
 import { AddTransactionDialog } from './add-transaction-dialog';
+import { ThemeToggle } from './theme-toggle';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -87,6 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Button>
               </span>
             </AddTransactionDialog>
+            <ThemeToggle />
             <UserNav />
           </div>
         </header>
