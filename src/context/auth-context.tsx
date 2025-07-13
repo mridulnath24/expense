@@ -15,12 +15,39 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, type Firestore } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
+import { type AppData } from '@/lib/types';
+
+const defaultData: AppData = {
+  transactions: [],
+  categories: {
+    income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
+    expense: [
+      'Food',
+      'Transport',
+      'Utilities',
+      'House Rent',
+      'Entertainment',
+      'Health',
+      'Shopping',
+      'Other',
+      'Grocery',
+      'DPS',
+      'EMI',
+      'Medical',
+      'Electricity Bill',
+      'Gas Bill',
+      'Wifi Bill',
+    ],
+  },
+};
 
 interface AuthContextType {
   user: User | null;
   username: string | null;
   loading: boolean;
+  db: Firestore | null;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
   signInWithGoogle: () => Promise<any>;
@@ -32,18 +59,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
+let db: Firestore | null = null;
 
-const initializeFirebase = (): Auth | null => {
-    if (auth) {
-        return auth;
+const initializeFirebase = (): { auth: Auth | null, db: Firestore | null } => {
+    if (auth && db) {
+        return { auth, db };
     }
 
     if (typeof window === 'undefined') {
-        return null;
+        return { auth: null, db: null };
     }
     
-    // WARNING: Hardcoding configuration is a security risk.
-    // It is strongly recommended to use environment variables.
     const firebaseConfig: FirebaseOptions = {
       apiKey: "AIzaSyADF0r6skU1Hd1C2TfIR6zCYon05ITYlI4",
       authDomain: "expense-tracker-app-1f50d.firebaseapp.com",
@@ -57,16 +83,18 @@ const initializeFirebase = (): Auth | null => {
         try {
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
+            db = getFirestore(app);
         } catch (e) {
             console.error("Firebase initialization error:", e);
-            return null;
+            return { auth: null, db: null };
         }
     } else {
         app = getApp();
         auth = getAuth(app);
+        db = getFirestore(app);
     }
 
-    return auth;
+    return { auth, db };
 }
 
 
@@ -75,30 +103,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [authInstance, setAuthInstance] = useState<Auth | null>(null);
+  const [dbInstance, setDbInstance] = useState<Firestore | null>(null);
 
   useEffect(() => {
-    const initializedAuth = initializeFirebase();
-    if (initializedAuth) {
+    const { auth: initializedAuth, db: initializedDb } = initializeFirebase();
+    if (initializedAuth && initializedDb) {
         setAuthInstance(initializedAuth);
+        setDbInstance(initializedDb);
     } else {
-        setLoading(false); // Stop loading if initialization fails
+        setLoading(false);
     }
   }, []);
   
+  const handleUserAuth = async (user: User | null) => {
+    setUser(user);
+    if (user && dbInstance) {
+        setUsername(user.displayName || user.email || null);
+        // Check if user has data in Firestore, if not, create it
+        const userDocRef = doc(dbInstance, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+            await setDoc(userDocRef, defaultData);
+        }
+    } else {
+        setUsername(null);
+    }
+    setLoading(false);
+  }
 
   useEffect(() => {
     if (!authInstance) {
       if (loading) setLoading(false);
       return;
     }
-    const unsubscribe = onAuthStateChanged(authInstance, (user) => {
-      setUser(user);
-      setUsername(user?.displayName || user?.email || null);
-      setLoading(false);
-    });
+    const unsubscribe = onAuthStateChanged(authInstance, handleUserAuth);
 
     return () => unsubscribe();
-  }, [authInstance, loading]);
+  }, [authInstance, dbInstance, loading]);
 
   const signIn = (email: string, password: string) => {
     if (!authInstance) return Promise.reject(new Error("Firebase not initialized"));
@@ -112,9 +153,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await updateProfile(user, {
         displayName: `${firstName} ${lastName}`,
     });
-    // Manually update the user object after profile update
-    setUser({...user, displayName: `${firstName} ${lastName}`});
-    setUsername(`${firstName} ${lastName}`);
+    
+    // Manually trigger user auth handling which creates the DB entry
+    await handleUserAuth(user);
+
     return userCredential;
   };
 
@@ -132,12 +174,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     if (!authInstance) return;
-    const currentUserId = user?.uid;
-    // Clear user-specific data from local storage before signing out
-    if (currentUserId) {
-        const key = `expense_tracker_data_${currentUserId}`;
-        localStorage.removeItem(key);
-    }
     signOut(authInstance);
   };
 
@@ -163,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, username, loading, signIn, signUp, signInWithGoogle, signInWithFacebook, logout }}>
+    <AuthContext.Provider value={{ user, username, loading, db: dbInstance, signIn, signUp, signInWithGoogle, signInWithFacebook, logout }}>
       {children}
     </AuthContext.Provider>
   );

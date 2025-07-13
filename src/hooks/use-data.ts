@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
+import { doc, getDoc, setDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { type AppData, type Transaction } from '@/lib/types';
 
 const defaultData: AppData = {
@@ -29,113 +30,107 @@ const defaultData: AppData = {
 };
 
 export function useData() {
-  const { user } = useAuth();
+  const { user, db } = useAuth();
   const [data, setData] = useState<AppData>(defaultData);
   const [loading, setLoading] = useState(true);
 
-  const storageKey = user ? `expense_tracker_data_${user.uid}` : '';
-
   useEffect(() => {
-    if (user && storageKey) {
+    let unsubscribe: Unsubscribe | undefined;
+
+    if (user && db) {
       setLoading(true);
-      try {
-        const storedDataJSON = localStorage.getItem(storageKey);
-        if (storedDataJSON) {
-          const storedData = JSON.parse(storedDataJSON);
-          // Merge default categories with stored categories to ensure new categories are added
+      const userDocRef = doc(db, 'users', user.uid);
+
+      unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const fetchedData = docSnap.data() as AppData;
+           // Merge default categories with stored categories to ensure new categories are added
           const mergedCategories = {
-            income: [...new Set([...defaultData.categories.income, ...(storedData.categories?.income || [])])],
-            expense: [...new Set([...defaultData.categories.expense, ...(storedData.categories?.expense || [])])],
+            income: [...new Set([...defaultData.categories.income, ...(fetchedData.categories?.income || [])])],
+            expense: [...new Set([...defaultData.categories.expense, ...(fetchedData.categories?.expense || [])])],
           };
-          const updatedData = { ...storedData, categories: mergedCategories };
+          const sortedTransactions = fetchedData.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          const updatedData = { ...fetchedData, categories: mergedCategories, transactions: sortedTransactions };
           setData(updatedData);
-          // Save the updated data back to localStorage if it was changed
-          if(JSON.stringify(updatedData) !== JSON.stringify(storedData)) {
-            localStorage.setItem(storageKey, JSON.stringify(updatedData));
-          }
         } else {
-          // Set default data for new user
+          // Document doesn't exist, which shouldn't happen if auth context is correct
+          // but we can set default data as a fallback
           setData(defaultData);
-          localStorage.setItem(storageKey, JSON.stringify(defaultData));
         }
-      } catch (error) {
-        console.error("Failed to process data from localStorage", error);
-        setData(defaultData);
-      } finally {
         setLoading(false);
-      }
+      }, (error) => {
+         console.error("Firestore snapshot error:", error);
+         setLoading(false);
+      });
+
     } else if (!user) {
+      // Not logged in, use default non-persistent data
       setData(defaultData);
       setLoading(false);
     }
-  }, [user, storageKey]);
+    
+    // Cleanup subscription on unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [user, db]);
 
-  const saveData = useCallback((newData: AppData) => {
-    if (user && storageKey) {
+  const saveData = useCallback(async (newData: AppData) => {
+    if (user && db) {
       try {
-        // Ensure transactions are sorted by date descending before saving
         const sortedTransactions = newData.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         const dataToSave = { ...newData, transactions: sortedTransactions };
-        localStorage.setItem(storageKey, JSON.stringify(dataToSave));
-        setData(dataToSave);
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, dataToSave, { merge: true });
+        // No need to call setData here as onSnapshot will handle it
       } catch (error) {
-        console.error("Failed to save data to localStorage", error);
+        console.error("Failed to save data to Firestore", error);
       }
     }
-  }, [user, storageKey]);
+  }, [user, db]);
 
   const addTransaction = useCallback((transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
       ...transaction,
       id: crypto.randomUUID(),
     };
-    setData((prevData) => {
-      const newData = {
-        ...prevData,
-        transactions: [newTransaction, ...prevData.transactions],
-      };
-      saveData(newData);
-      return newData;
-    });
-  }, [saveData]);
+    const updatedData = {
+      ...data,
+      transactions: [newTransaction, ...data.transactions],
+    };
+    saveData(updatedData);
+  }, [data, saveData]);
   
   const updateTransaction = useCallback((transaction: Transaction) => {
-    setData((prevData) => {
-      const newData = {
-        ...prevData,
-        transactions: prevData.transactions.map(t => t.id === transaction.id ? transaction : t),
-      };
-      saveData(newData);
-      return newData;
-    });
-  }, [saveData]);
+    const updatedData = {
+      ...data,
+      transactions: data.transactions.map(t => t.id === transaction.id ? transaction : t),
+    };
+    saveData(updatedData);
+  }, [data, saveData]);
 
   const deleteTransaction = useCallback((id: string) => {
-     setData((prevData) => {
-      const newData = {
-        ...prevData,
-        transactions: prevData.transactions.filter(t => t.id !== id),
-      };
-      saveData(newData);
-      return newData;
-     });
-  }, [saveData]);
+     const updatedData = {
+       ...data,
+       transactions: data.transactions.filter(t => t.id !== id),
+     };
+     saveData(updatedData);
+  }, [data, saveData]);
   
   const addCategory = useCallback((type: 'income' | 'expense', category: string) => {
-    setData((prevData) => {
-      if (prevData.categories[type].includes(category)) return prevData;
+    if (data.categories[type].includes(category)) return;
 
-      const newData = {
-        ...prevData,
-        categories: {
-          ...prevData.categories,
-          [type]: [...prevData.categories[type], category],
-        },
-      };
-      saveData(newData);
-      return newData;
-    });
-  }, [saveData]);
+    const updatedData = {
+      ...data,
+      categories: {
+        ...data.categories,
+        [type]: [...data.categories[type], category],
+      },
+    };
+    saveData(updatedData);
+  }, [data, saveData]);
 
 
   return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory };
