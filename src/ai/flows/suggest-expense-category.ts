@@ -77,7 +77,7 @@ Available Categories:
 Based on the description, call the provideCategorySuggestion tool with the most appropriate category and a confidence score.`,
     });
 
-    const toolRequest = llmResponse.toolRequest();
+    const toolRequest = llmResponse.toolRequest;
     if (
       toolRequest &&
       toolRequest.name === 'provideCategorySuggestion' &&
