@@ -148,12 +148,12 @@ export default function ReportsPage() {
   };
 
   const generateExcel = () => {
-    const worksheetData = filteredTransactions.map(t => ({
-        [t('transactionTable_col_date')]: format(new Date(t.date), "yyyy-MM-dd"),
-        [t('transactionTable_col_description')]: t.description,
-        [t('transactionTable_col_category')]: getTranslatedCategory(t.category),
-        [t('reports_col_type')]: t.type,
-        [t('transactionTable_col_amount')]: t.amount,
+    const worksheetData = filteredTransactions.map(transaction => ({
+        [t('transactionTable_col_date')]: format(new Date(transaction.date), "yyyy-MM-dd"),
+        [t('transactionTable_col_description')]: transaction.description,
+        [t('transactionTable_col_category')]: getTranslatedCategory(transaction.category),
+        [t('reports_col_type')]: transaction.type,
+        [t('transactionTable_col_amount')]: transaction.amount,
     }));
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
