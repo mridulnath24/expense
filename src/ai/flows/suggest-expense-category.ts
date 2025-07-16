@@ -29,6 +29,8 @@ const SuggestExpenseCategoryOutputSchema = z.object({
     .describe('The AI-suggested category for the expense.'),
   confidence: z
     .number()
+    .min(0)
+    .max(1)
     .describe(
       'The confidence level (0 to 1) of the category suggestion, where 1 is highest confidence.'
     ),
@@ -47,9 +49,17 @@ const prompt = ai.definePrompt({
   name: 'suggestExpenseCategoryPrompt',
   input: {schema: SuggestExpenseCategoryInputSchema},
   output: {schema: SuggestExpenseCategoryOutputSchema},
-  prompt: `You are an AI assistant helping users categorize their expenses.
+  prompt: `You are an expert financial assistant. Your task is to categorize an expense based on its description. You must choose a category from the provided list.
 
-Given the following expense description, suggest the most appropriate category from the provided list. Also, provide a confidence level (0 to 1) for your suggestion.
+You MUST output your response in a valid JSON object format, containing 'suggestedCategory' and 'confidence'. Do not include any other text or explanations outside of the JSON object.
+
+Here is an example of a valid response:
+{
+  "suggestedCategory": "Food",
+  "confidence": 0.9
+}
+
+Now, categorize the following expense:
 
 Expense Description: {{{expenseDescription}}}
 
@@ -68,6 +78,9 @@ const suggestExpenseCategoryFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('AI failed to provide a suggestion.');
+    }
+    return output;
   }
 );
