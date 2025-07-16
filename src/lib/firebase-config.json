@@ -1,9 +1,9 @@
 {
-  "apiKey": "YOUR_API_KEY",
-  "authDomain": "YOUR_AUTH_DOMAIN",
-  "projectId": "YOUR_PROJECT_ID",
-  "storageBucket": "YOUR_STORAGE_BUCKET",
-  "messagingSenderId": "YOUR_MESSAGING_SENDER_ID",
-  "appId": "YOUR_APP_ID",
-  "measurementId": "YOUR_MEASUREMENT_ID"
+  "apiKey": "AIzaSyADF0r6skU1Hd1C2TfIR6zCYon05ITYlI4",
+  "authDomain": "expense-tracker-app-1f50d.firebaseapp.com",
+  "projectId": "expense-tracker-app-1f50d",
+  "storageBucket": "expense-tracker-app-1f50d.appspot.com",
+  "messagingSenderId": "935484828246",
+  "appId": "1:935484828246:web:29e3f332c7d782e62a69f7",
+  "measurementId": "G-CJVYBXVJ2Y"
 }
