@@ -8,10 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, AlertTriangle } from 'lucide-react';
 import Logo from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/context/language-context';
+import firebaseConfig from '@/lib/firebase-config.json';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
@@ -29,6 +31,7 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
+const isFirebaseConfigured = firebaseConfig.apiKey !== 'YOUR_API_KEY';
 
 export default function AuthPage() {
   const [firstName, setFirstName] = useState('');
@@ -141,12 +144,24 @@ export default function AuthPage() {
             </p>
         </div>
 
+        {!isFirebaseConfigured && (
+            <Alert variant="destructive" className="mb-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Configuration Error</AlertTitle>
+                <AlertDescription>
+                   Firebase is not configured. Please add your project's credentials to{' '}
+                   <code className="font-mono text-xs bg-destructive/20 p-1 rounded">src/lib/firebase-config.json</code>{' '}
+                   to enable authentication.
+                </AlertDescription>
+            </Alert>
+        )}
+
         {view === 'tabs' ? (
         <>
             <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">{t('signIn_tab')}</TabsTrigger>
-                <TabsTrigger value="signup">{t('signUp_tab')}</TabsTrigger>
+                <TabsTrigger value="signin" disabled={!isFirebaseConfigured}>{t('signIn_tab')}</TabsTrigger>
+                <TabsTrigger value="signup" disabled={!isFirebaseConfigured}>{t('signUp_tab')}</TabsTrigger>
             </TabsList>
             <TabsContent value="signin">
                 <Card>
@@ -165,7 +180,7 @@ export default function AuthPage() {
                     <Input id="signin-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                     </div>
                     {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                    <Button onClick={() => handleAuthAction('signIn')} disabled={isProcessing} className="w-full">
+                    <Button onClick={() => handleAuthAction('signIn')} disabled={isProcessing || !isFirebaseConfigured} className="w-full">
                     {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {t('signIn_button')}
                     </Button>
@@ -194,7 +209,7 @@ export default function AuthPage() {
                     <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                     </div>
                     {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                    <Button onClick={() => handleAuthAction('signUp')} disabled={isProcessing} className="w-full">
+                    <Button onClick={() => handleAuthAction('signUp')} disabled={isProcessing || !isFirebaseConfigured} className="w-full">
                     {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {t('signUp_createAccount_button')}
                     </Button>
@@ -213,11 +228,11 @@ export default function AuthPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isProcessing}>
+                <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isProcessing || !isFirebaseConfigured}>
                     {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5"/>}
                     {t('google_button')}
                 </Button>
-                <Button variant="outline" className="w-full" onClick={handleFacebookSignIn} disabled={isProcessing}>
+                <Button variant="outline" className="w-full" onClick={handleFacebookSignIn} disabled={isProcessing || !isFirebaseConfigured}>
                     {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FacebookIcon className="mr-2 h-5 w-5"/>}
                     {t('facebook_button')}
                 </Button>
@@ -232,7 +247,7 @@ export default function AuthPage() {
                         <Input id="reset-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
                      {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                    <Button onClick={handlePasswordReset} disabled={isProcessing} className="w-full">
+                    <Button onClick={handlePasswordReset} disabled={isProcessing || !isFirebaseConfigured} className="w-full">
                         {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {t('resetPassword_button')}
                     </Button>
@@ -247,3 +262,5 @@ export default function AuthPage() {
     </main>
   );
 }
+
+    
