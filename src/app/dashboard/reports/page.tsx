@@ -30,11 +30,11 @@ export default function ReportsPage() {
   });
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('all-months');
   
   const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
     setDateRange(newDateRange);
-    setSelectedMonth(''); // Clear month selection when custom date range is used
+    setSelectedMonth('all-months'); // Clear month selection when custom date range is used
   };
 
   const availableMonths = useMemo(() => {
@@ -46,15 +46,14 @@ export default function ReportsPage() {
   }, [data.transactions]);
 
   const handleMonthChange = (month: string) => {
-    if (!month) {
-        setSelectedMonth('');
+    setSelectedMonth(month);
+    if (month === 'all-months') {
         setDateRange({
             from: subDays(new Date(), 29),
             to: new Date(),
         });
         return;
     }
-    setSelectedMonth(month);
     const monthDate = parse(month, 'yyyy-MM', new Date());
     setDateRange({
       from: startOfMonth(monthDate),
@@ -223,7 +222,7 @@ export default function ReportsPage() {
                             <SelectValue placeholder={t('reports_filter_month_placeholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">{t('reports_filter_month_all')}</SelectItem>
+                             <SelectItem value="all-months">{t('reports_filter_month_all')}</SelectItem>
                             {availableMonths.map(month => (
                                 <SelectItem key={month} value={month}>{format(parse(month, 'yyyy-MM', new Date()), 'MMMM yyyy')}</SelectItem>
                             ))}
