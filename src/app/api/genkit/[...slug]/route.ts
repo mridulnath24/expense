@@ -1,15 +1,11 @@
 'use server';
 
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
-import {defineNextJsHandler} from '@genkit-ai/next';
+import {createApi} from '@genkit-ai/next/api';
 
 // Import flows so that they are registered with Genkit.
 import '@/ai/flows/suggest-expense-category';
+import {ai} from '@/ai/genkit';
 
-genkit({
-  plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
+export const {GET, POST} = createApi({
+  ai,
 });
-
-export const {GET, POST} = defineNextJsHandler();
