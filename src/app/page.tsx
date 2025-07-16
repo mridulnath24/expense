@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import Logo from '@/components/logo';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,6 +37,7 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const [view, setView] = useState<'tabs' | 'reset'>('tabs');
   
   const { user, loading, signIn, signUp, signInWithGoogle, signInWithFacebook, sendPasswordReset } = useAuth();
   const router = useRouter();
@@ -66,7 +67,6 @@ export default function AuthPage() {
         }
         await signUp(email, password, firstName, lastName);
       }
-      // Success will trigger useEffect and redirect
     } catch (err: any) {
       setError(err.message || 'An error occurred.');
     } finally {
@@ -79,7 +79,6 @@ export default function AuthPage() {
     setIsProcessing(true);
     try {
       await signInWithGoogle();
-      // Success will trigger useEffect and redirect
     } catch (err: any) {
       setError(err.message || 'An error occurred.');
     } finally {
@@ -92,7 +91,6 @@ export default function AuthPage() {
     setIsProcessing(true);
     try {
       await signInWithFacebook();
-      // Success will trigger useEffect and redirect
     } catch (err: any) {
       setError(err.message || 'An error occurred.');
     } finally {
@@ -103,7 +101,7 @@ export default function AuthPage() {
   const handlePasswordReset = async () => {
     setError('');
     if (!email.trim()) {
-        setError('Please enter your email address to reset your password.');
+        setError('Please enter your email address.');
         return;
     }
     setIsProcessing(true);
@@ -113,6 +111,7 @@ export default function AuthPage() {
             title: 'Password Reset Email Sent',
             description: 'Check your inbox for instructions to reset your password.',
         });
+        setView('tabs'); // Go back to login view on success
     } catch (err: any) {
         setError(err.message || 'Failed to send password reset email.');
     } finally {
@@ -135,89 +134,113 @@ export default function AuthPage() {
         <div className="mx-auto mb-6 text-center">
             <Logo />
             <h1 className="text-2xl font-bold mt-2">Welcome to Expense Tracker</h1>
-            <p className="text-muted-foreground">Sign in or create an account to continue</p>
+            <p className="text-muted-foreground">
+                {view === 'reset' ? 'Reset your password' : 'Sign in or create an account to continue'}
+            </p>
         </div>
 
-        <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
-          <TabsContent value="signin">
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <Input id="signin-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="signin-password">Password</Label>
-                        <Button variant="link" className="h-auto p-0 text-xs" onClick={handlePasswordReset}>
-                            Forgot Password?
-                        </Button>
-                    </div>
-                  <Input id="signin-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                </div>
-                 {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                <Button onClick={() => handleAuthAction('signIn')} disabled={isProcessing} className="w-full">
-                  {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sign In
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="signup">
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {view === 'tabs' ? (
+        <>
+            <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="signin">Sign In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
+            <TabsContent value="signin">
+                <Card>
+                <CardContent className="pt-6 space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="signup-firstname">First Name</Label>
-                        <Input id="signup-firstname" placeholder="John" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                    <Label htmlFor="signin-email">Email</Label>
+                    <Input id="signin-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="signup-lastname">Last Name</Label>
-                        <Input id="signup-lastname" placeholder="Doe" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="signin-password">Password</Label>
+                            <Button variant="link" className="h-auto p-0 text-xs" onClick={() => { setView('reset'); setError(''); }}>
+                                Forgot Password?
+                            </Button>
+                        </div>
+                    <Input id="signin-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                     </div>
+                    {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+                    <Button onClick={() => handleAuthAction('signIn')} disabled={isProcessing} className="w-full">
+                    {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sign In
+                    </Button>
+                </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="signup">
+                <Card>
+                <CardContent className="pt-6 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="signup-firstname">First Name</Label>
+                            <Input id="signup-firstname" placeholder="John" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="signup-lastname">Last Name</Label>
+                            <Input id="signup-lastname" placeholder="Doe" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input id="signup-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                    </div>
+                    {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+                    <Button onClick={() => handleAuthAction('signUp')} disabled={isProcessing} className="w-full">
+                    {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Create Account
+                    </Button>
+                </CardContent>
+                </Card>
+            </TabsContent>
+            </Tabs>
+            
+            <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input id="signup-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                </div>
-                {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-                <Button onClick={() => handleAuthAction('signUp')} disabled={isProcessing} className="w-full">
-                  {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Account
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isProcessing}>
+                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5"/>}
+                    Google
                 </Button>
-              </CardContent>
+                <Button variant="outline" className="w-full" onClick={handleFacebookSignIn} disabled={isProcessing}>
+                    {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FacebookIcon className="mr-2 h-5 w-5"/>}
+                    Facebook
+                </Button>
+            </div>
+        </>
+        ) : (
+            <Card>
+                <CardContent className="pt-6 space-y-4">
+                    <p className="text-sm text-muted-foreground">Enter your email address and we'll send you a link to reset your password.</p>
+                     <div className="space-y-2">
+                        <Label htmlFor="reset-email">Email</Label>
+                        <Input id="reset-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    </div>
+                     {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+                    <Button onClick={handlePasswordReset} disabled={isProcessing} className="w-full">
+                        {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Send Reset Email
+                    </Button>
+                    <Button variant="link" className="w-full text-sm" onClick={() => { setView('tabs'); setError(''); }}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Sign In
+                    </Button>
+                </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isProcessing}>
-                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5"/>}
-                Google
-            </Button>
-             <Button variant="outline" className="w-full" onClick={handleFacebookSignIn} disabled={isProcessing}>
-                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FacebookIcon className="mr-2 h-5 w-5"/>}
-                Facebook
-            </Button>
-        </div>
-
+        )}
       </div>
     </main>
   );
