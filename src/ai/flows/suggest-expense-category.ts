@@ -46,9 +46,9 @@ const categorySuggestionTool = ai.defineTool(
     description:
       'Provides a category suggestion for the expense description.',
     inputSchema: SuggestExpenseCategoryOutputSchema,
-    outputSchema: z.void(),
+    outputSchema: SuggestExpenseCategoryOutputSchema,
   },
-  async () => {} // The tool itself doesn't need to do anything, it's just a data structure.
+  async (suggestion) => suggestion // The tool just returns the data it receives.
 );
 
 export async function suggestExpenseCategory(
@@ -72,7 +72,7 @@ const suggestExpenseCategoryFlow = ai.defineFlow(
 Expense Description: ${input.expenseDescription}
 
 Available Categories:
-${input.categories.join('\n- ')}
+- ${input.categories.join('\n- ')}
 
 Based on the description, call the provideCategorySuggestion tool with the most appropriate category and a confidence score.`,
     });
