@@ -1,22 +1,25 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DateRange } from 'react-day-picker';
 import { subDays, format } from 'date-fns';
 import { useData } from '@/hooks/use-data';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { SpendingChart } from '@/components/reports/spending-chart';
 import { DateRangePicker } from '@/components/reports/date-range-picker';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { BarChart, FileDown, FileType } from 'lucide-react';
+import { BarChart, FileDown, FileType, ArrowDownCircle, ArrowUpCircle, TrendingUp } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { formatCurrency } from '@/lib/utils';
 import { type Transaction } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ReportsDataTable } from '@/components/reports/reports-data-table';
+import { Separator } from '@/components/ui/separator';
 
 export default function ReportsPage() {
   const { data, loading } = useData();
@@ -25,69 +28,106 @@ export default function ReportsPage() {
     from: subDays(new Date(), 29),
     to: new Date(),
   });
+  const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  const filteredTransactions = data.transactions.filter(t => {
-    const transactionDate = new Date(t.date);
+  const { filteredTransactions, totalIncome, totalExpense } = useMemo(() => {
     const from = dateRange?.from ? new Date(dateRange.from.setHours(0,0,0,0)) : undefined;
     const to = dateRange?.to ? new Date(dateRange.to.setHours(23,59,59,999)) : undefined;
-    return (!from || transactionDate >= from) && (!to || transactionDate <= to);
-  });
+
+    const transactions = data.transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      const isDateInRange = (!from || transactionDate >= from) && (!to || transactionDate <= to);
+      const isTypeMatch = typeFilter === 'all' || t.type === typeFilter;
+      const isCategoryMatch = categoryFilter === 'all' || t.category === categoryFilter;
+      return isDateInRange && isTypeMatch && isCategoryMatch;
+    });
+
+    const income = transactions
+      .filter(t => t.type === 'income')
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const expense = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    return { filteredTransactions: transactions, totalIncome: income, totalExpense: expense };
+
+  }, [data.transactions, dateRange, typeFilter, categoryFilter]);
+  
+  const availableCategories = useMemo(() => {
+    if (typeFilter === 'all') {
+      return ['all', ...data.categories.income, ...data.categories.expense];
+    }
+    return ['all', ...data.categories[typeFilter]];
+  }, [typeFilter, data.categories]);
+
+  const handleTypeChange = (value: string) => {
+    setTypeFilter(value as 'all' | 'income' | 'expense');
+    setCategoryFilter('all'); // Reset category filter when type changes
+  };
+
+  const getTranslatedCategory = (category: string) => {
+    const incomeKey = `categories_income_${category.toLowerCase().replace(/\s+/g, '')}`;
+    const expenseKey = `categories_expense_${category.toLowerCase().replace(/\s+/g, '')}`;
+    const translatedIncome = t(incomeKey);
+    const translatedExpense = t(expenseKey);
+    if(translatedIncome !== incomeKey) return translatedIncome;
+    if(translatedExpense !== expenseKey) return translatedExpense;
+    return category;
+  };
 
   const generatePDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ["Date", "Description", "Category", "Type", "Amount"];
+    const tableColumn = [t('transactionTable_col_date'), t('transactionTable_col_description'), t('transactionTable_col_category'), t('reports_col_type'), t('transactionTable_col_amount')];
     const tableRows: (string | number)[][] = [];
     
-    let totalIncome = 0;
-    let totalExpense = 0;
-
     filteredTransactions.forEach(transaction => {
       const transactionData = [
         format(new Date(transaction.date), "yyyy-MM-dd"),
         transaction.description,
-        transaction.category,
-        transaction.type,
+        getTranslatedCategory(transaction.category),
+        t(`addTransaction_type_${transaction.type}`),
         formatCurrency(transaction.amount),
       ];
       tableRows.push(transactionData);
-      if(transaction.type === 'income') totalIncome += transaction.amount
-      else totalExpense += transaction.amount
     });
 
     const dateFrom = dateRange?.from ? format(dateRange.from, 'MMM dd, yyyy') : 'start';
     const dateTo = dateRange?.to ? format(dateRange.to, 'MMM dd, yyyy') : 'today';
 
     doc.setFontSize(18);
-    doc.text("Expense Report", 14, 22);
+    doc.text(t('reports_title'), 14, 22);
     doc.setFontSize(12);
-    doc.text(`Date Range: ${dateFrom} to ${dateTo}`, 14, 30);
+    doc.text(`${t('reports_dateRange')}: ${dateFrom} to ${dateTo}`, 14, 30);
     
     doc.autoTable({
         head: [tableColumn],
         body: tableRows,
-        startY: 35,
+        startY: 50,
+        styles: { font: "HindSiliguri" }
     });
     
     const finalY = (doc as any).lastAutoTable.finalY;
     doc.setFontSize(12);
-    doc.text(`Total Income: ${formatCurrency(totalIncome)}`, 14, finalY + 10);
-    doc.text(`Total Expense: ${formatCurrency(totalExpense)}`, 14, finalY + 17);
-    doc.text(`Balance: ${formatCurrency(totalIncome - totalExpense)}`, 14, finalY + 24);
+    doc.text(`${t('dashboard_totalIncome')}: ${formatCurrency(totalIncome)}`, 14, finalY + 10);
+    doc.text(`${t('dashboard_totalExpenses')}: ${formatCurrency(totalExpense)}`, 14, finalY + 17);
+    doc.text(`${t('dashboard_currentBalance')}: ${formatCurrency(totalIncome - totalExpense)}`, 14, finalY + 24);
 
     doc.save(`report_${dateFrom}_-_${dateTo}.pdf`);
   };
 
   const generateExcel = () => {
     const worksheetData = filteredTransactions.map(t => ({
-        Date: format(new Date(t.date), "yyyy-MM-dd"),
-        Description: t.description,
-        Category: t.category,
-        Type: t.type,
-        Amount: t.amount,
+        [t('transactionTable_col_date')]: format(new Date(t.date), "yyyy-MM-dd"),
+        [t('transactionTable_col_description')]: t.description,
+        [t('transactionTable_col_category')]: getTranslatedCategory(t.category),
+        [t('reports_col_type')]: t.type,
+        [t('transactionTable_col_amount')]: t.amount,
     }));
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+    XLSX.utils.book_append_sheet(workbook, worksheet, t('header_reports'));
     
     const dateFrom = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : 'start';
     const dateTo = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : 'today';
@@ -104,7 +144,16 @@ export default function ReportsPage() {
           <Skeleton className="h-4 w-3/4"/>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Skeleton className="h-10 w-64"/>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Skeleton className="h-10 w-full sm:w-64"/>
+            <Skeleton className="h-10 w-full sm:w-48"/>
+            <Skeleton className="h-10 w-full sm:w-48"/>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+          </div>
           <Skeleton className="h-96 w-full"/>
         </CardContent>
       </Card>
@@ -114,14 +163,14 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle>{t('reports_title')}</CardTitle>
             <CardDescription>
               {t('reports_desc')}
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={generatePDF} disabled={filteredTransactions.length === 0}>
                 <FileDown className="mr-2 h-4 w-4" />
                 {t('reports_pdf_button')}
@@ -132,21 +181,100 @@ export default function ReportsPage() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
-          {filteredTransactions.filter(t => t.type === 'expense').length > 0 ? (
-            <SpendingChart transactions={filteredTransactions} />
-          ) : (
-            <div className="flex h-96 flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed bg-secondary/50 py-12 text-center">
-              <div className="rounded-full bg-background p-4 shadow">
-                 <BarChart className="h-8 w-8 text-muted-foreground" />
+        <CardContent className="space-y-6">
+          <div className="rounded-lg border p-4 space-y-4">
+              <p className="text-sm font-medium text-muted-foreground">{t('reports_filters')}</p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
+                <div className="flex gap-4">
+                  <Select value={typeFilter} onValueChange={handleTypeChange}>
+                      <SelectTrigger className="w-full sm:w-[180px]">
+                          <SelectValue placeholder={t('reports_filter_type_placeholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="all">{t('reports_filter_type_all')}</SelectItem>
+                          <SelectItem value="income">{t('addTransaction_type_income')}</SelectItem>
+                          <SelectItem value="expense">{t('addTransaction_type_expense')}</SelectItem>
+                      </SelectContent>
+                  </Select>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter} disabled={typeFilter === 'all' && categoryFilter === 'all'}>
+                      <SelectTrigger className="w-full sm:w-[180px]">
+                          <SelectValue placeholder={t('reports_filter_category_placeholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="all">{t('reports_filter_category_all')}</SelectItem>
+                          {availableCategories.slice(1).map(cat => (
+                              <SelectItem key={cat} value={cat}>{getTranslatedCategory(cat)}</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold">{t('reports_noExpenseData_title')}</h3>
-              <p className="text-muted-foreground">{t('reports_noExpenseData_desc')}</p>
-            </div>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{t('dashboard_totalIncome')}</CardTitle>
+                    <ArrowUpCircle className="h-5 w-5 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(totalIncome)}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{t('dashboard_totalExpenses')}</CardTitle>
+                    <ArrowDownCircle className="h-5 w-5 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(totalExpense)}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{t('dashboard_currentBalance')}</CardTitle>
+                    <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(totalIncome - totalExpense)}</div>
+                </CardContent>
+            </Card>
+          </div>
+        
+          {typeFilter !== 'income' && (
+            <>
+              <Separator />
+              <h3 className="text-lg font-semibold">{t('reports_spendingByCategory_title')}</h3>
+              {filteredTransactions.filter(t => t.type === 'expense').length > 0 ? (
+                <SpendingChart transactions={filteredTransactions} />
+              ) : (
+                <div className="flex h-96 flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed bg-secondary/50 py-12 text-center">
+                  <div className="rounded-full bg-background p-4 shadow">
+                    <BarChart className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold">{t('reports_noExpenseData_title')}</h3>
+                  <p className="text-muted-foreground">{t('reports_noExpenseData_desc')}</p>
+                </div>
+              )}
+            </>
           )}
+
         </CardContent>
       </Card>
+      
+      <Card>
+        <CardHeader>
+            <CardTitle>{t('reports_filteredTransactions_title')}</CardTitle>
+            <CardDescription>{t('reports_filteredTransactions_desc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <ReportsDataTable transactions={filteredTransactions} />
+        </CardContent>
+      </Card>
+
     </div>
   );
 }
+
+    

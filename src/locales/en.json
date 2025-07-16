@@ -1,3 +1,4 @@
+
 {
     "app_title": "Expense Tracker",
     "signIn_welcome": "Welcome to Expense Tracker",
@@ -53,12 +54,24 @@
     "dashboard_recentTransactions": "Recent Transactions",
     "dashboard_noTransactions_title": "No transactions yet",
     "dashboard_noTransactions_desc": "Add your first transaction to get started.",
-    "reports_title": "Spending Report",
-    "reports_desc": "Analyze your spending habits by category over a selected period.",
+    "reports_title": "Financial Report",
+    "reports_desc": "Analyze your financial habits by customizing the filters below.",
     "reports_pdf_button": "PDF",
     "reports_excel_button": "Excel",
     "reports_noExpenseData_title": "No expense data",
     "reports_noExpenseData_desc": "There are no expenses recorded in this period.",
+    "reports_noData_title": "No data available",
+    "reports_noData_desc": "No transactions match your current filter criteria.",
+    "reports_filters": "Filters",
+    "reports_filter_type_placeholder": "Filter by type",
+    "reports_filter_type_all": "All Types",
+    "reports_filter_category_placeholder": "Filter by category",
+    "reports_filter_category_all": "All Categories",
+    "reports_col_type": "Type",
+    "reports_dateRange": "Date Range",
+    "reports_spendingByCategory_title": "Spending by Category",
+    "reports_filteredTransactions_title": "Filtered Transactions",
+    "reports_filteredTransactions_desc": "A detailed list of transactions matching your criteria.",
     "addTransaction_title_add": "Add New Transaction",
     "addTransaction_title_edit": "Edit Transaction",
     "addTransaction_desc_add": "Enter the details of your income or expense below.",
@@ -125,3 +138,5 @@
     "categories_expense_gasBill": "Gas Bill",
     "categories_expense_wifiBill": "Wifi Bill"
 }
+
+    

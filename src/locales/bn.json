@@ -1,3 +1,4 @@
+
 {
     "app_title": "খরচ ট্র্যাকার",
     "signIn_welcome": "খরচ ট্র্যাকারে স্বাগতম",
@@ -53,12 +54,24 @@
     "dashboard_recentTransactions": "সাম্প্রতিক লেনদেন",
     "dashboard_noTransactions_title": "এখনো কোনো লেনদেন নেই",
     "dashboard_noTransactions_desc": "শুরু করতে আপনার প্রথম লেনদেন যোগ করুন।",
-    "reports_title": "খরচের রিপোর্ট",
-    "reports_desc": "একটি নির্বাচিত সময়কালে বিভাগ দ্বারা আপনার খরচের অভ্যাস বিশ্লেষণ করুন।",
+    "reports_title": "আর্থিক রিপোর্ট",
+    "reports_desc": "নীচের ফিল্টারগুলি কাস্টমাইজ করে আপনার আর্থিক অভ্যাস বিশ্লেষণ করুন।",
     "reports_pdf_button": "পিডিএফ",
     "reports_excel_button": "এক্সেল",
     "reports_noExpenseData_title": "কোনো খরচের ডেটা নেই",
     "reports_noExpenseData_desc": "এই সময়কালে কোনো খরচ রেকর্ড করা হয়নি।",
+    "reports_noData_title": "কোন ডেটা উপলব্ধ নেই",
+    "reports_noData_desc": "কোনো লেনদেন আপনার বর্তমান ফিল্টার মানদণ্ডের সাথে মেলে না।",
+    "reports_filters": "ফিল্টার",
+    "reports_filter_type_placeholder": "প্রকার দ্বারা ফিল্টার করুন",
+    "reports_filter_type_all": "সব ধরনের",
+    "reports_filter_category_placeholder": "বিভাগ দ্বারা ফিল্টার করুন",
+    "reports_filter_category_all": "সমস্ত বিভাগ",
+    "reports_col_type": "প্রকার",
+    "reports_dateRange": "তারিখের সীমা",
+    "reports_spendingByCategory_title": "বিভাগ দ্বারা ব্যয়",
+    "reports_filteredTransactions_title": "ফিল্টার করা লেনদেন",
+    "reports_filteredTransactions_desc": "আপনার মানদণ্ডের সাথে মিলে যাওয়া লেনদেনের একটি বিস্তারিত তালিকা।",
     "addTransaction_title_add": "নতুন লেনদেন যোগ করুন",
     "addTransaction_title_edit": "লেনদেন সম্পাদনা করুন",
     "addTransaction_desc_add": "আপনার আয় বা খরচের বিবরণ নিচে লিখুন।",
@@ -125,3 +138,5 @@
     "categories_expense_gasBill": "গ্যাস বিল",
     "categories_expense_wifiBill": "ওয়াইফাই বিল"
 }
+
+    
