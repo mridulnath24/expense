@@ -101,7 +101,10 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
 
     setIsSuggesting(true);
     try {
-      const result = await suggestExpenseCategory({ expenseDescription: description });
+      const result = await suggestExpenseCategory({ 
+        expenseDescription: description,
+        categories: data.categories.expense,
+       });
       if (result.suggestedCategory) {
         const category = result.suggestedCategory;
         form.setValue('category', category, { shouldValidate: true });

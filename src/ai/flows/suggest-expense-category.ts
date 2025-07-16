@@ -1,5 +1,3 @@
-// Implemented Genkit flow for suggesting expense categories based on transaction descriptions.
-
 'use server';
 
 /**
@@ -17,6 +15,9 @@ const SuggestExpenseCategoryInputSchema = z.object({
   expenseDescription: z
     .string()
     .describe('The description of the uncategorized expense.'),
+  categories: z
+    .array(z.string())
+    .describe('A list of existing expense categories to choose from.'),
 });
 export type SuggestExpenseCategoryInput = z.infer<
   typeof SuggestExpenseCategoryInputSchema
@@ -48,10 +49,15 @@ const prompt = ai.definePrompt({
   output: {schema: SuggestExpenseCategoryOutputSchema},
   prompt: `You are an AI assistant helping users categorize their expenses.
 
-  Given the following expense description, suggest a category for it. Also, provide a confidence level (0 to 1) for your suggestion.
+Given the following expense description, suggest the most appropriate category from the provided list. Also, provide a confidence level (0 to 1) for your suggestion.
 
-  Expense Description: {{{expenseDescription}}}
-  `,
+Expense Description: {{{expenseDescription}}}
+
+Available Categories:
+{{#each categories}}
+- {{{this}}}
+{{/each}}
+`,
 });
 
 const suggestExpenseCategoryFlow = ai.defineFlow(
