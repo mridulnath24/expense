@@ -73,7 +73,7 @@ const initializeFirebase = (): { auth: Auth | null, db: Firestore | null } => {
     }
     
     const firebaseConfig: FirebaseOptions = {
-      apiKey: "AIzaSyCuuE5Kfa_ED16aKkBuoQ_Z9LQQLNdL47A",
+      apiKey: "YOUR_FIREBASE_API_KEY",
       authDomain: "expense-tracker-app-1f50d.firebaseapp.com",
       projectId: "expense-tracker-app-1f50d",
       storageBucket: "expense-tracker-app-1f50d.appspot.com",
