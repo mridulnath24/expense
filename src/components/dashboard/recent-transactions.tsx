@@ -74,18 +74,18 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   
   const renderMobileView = () => (
     <div className="space-y-3">
-        {transactions.map(t => (
-            <Card key={t.id} className="p-4">
+        {transactions.map(transaction => (
+            <Card key={transaction.id} className="p-4">
                 <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-1">
-                        <p className="font-medium">{t.description}</p>
-                        <p className="text-sm text-muted-foreground">{getTranslatedCategory(t.category, t.type)}</p>
-                         <p className="text-sm text-muted-foreground">{format(new Date(t.date), 'PP')}</p>
+                        <p className="font-medium">{transaction.description}</p>
+                        <p className="text-sm text-muted-foreground">{getTranslatedCategory(transaction.category, transaction.type)}</p>
+                         <p className="text-sm text-muted-foreground">{format(new Date(transaction.date), 'PP')}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                         <p className={`font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                           {t.type === 'income' ? '+' : '-'}
-                           {formatCurrency(t.amount)}
+                         <p className={`font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                           {transaction.type === 'income' ? '+' : '-'}
+                           {formatCurrency(transaction.amount)}
                         </p>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -95,11 +95,11 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                                <DropdownMenuItem onClick={() => handleEditClick(transaction)}>
                                     <Pencil className="mr-2 h-4 w-4" />
                                     <span>{t('transactionTable_action_edit')}</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive focus:text-destructive">
+                                <DropdownMenuItem onClick={() => handleDeleteClick(transaction)} className="text-destructive focus:text-destructive">
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     <span>{t('transactionTable_action_delete')}</span>
                                 </DropdownMenuItem>
@@ -126,20 +126,20 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {transactions.map((t) => (
-          <TableRow key={t.id}>
-            <TableCell className="font-medium">{t.description}</TableCell>
+        {transactions.map((transaction) => (
+          <TableRow key={transaction.id}>
+            <TableCell className="font-medium">{transaction.description}</TableCell>
             <TableCell className="hidden sm:table-cell">
-              <Badge variant="outline">{getTranslatedCategory(t.category, t.type)}</Badge>
+              <Badge variant="outline">{getTranslatedCategory(transaction.category, transaction.type)}</Badge>
             </TableCell>
-            <TableCell className="hidden md:table-cell">{format(new Date(t.date), 'PP')}</TableCell>
+            <TableCell className="hidden md:table-cell">{format(new Date(transaction.date), 'PP')}</TableCell>
             <TableCell
               className={`text-right font-semibold ${
-                t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
               }`}
             >
-              {t.type === 'income' ? '+' : '-'}
-              {formatCurrency(t.amount)}
+              {transaction.type === 'income' ? '+' : '-'}
+              {formatCurrency(transaction.amount)}
             </TableCell>
             <TableCell>
               <DropdownMenu>
@@ -150,11 +150,11 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                  <DropdownMenuItem onClick={() => handleEditClick(transaction)}>
                     <Pencil className="mr-2 h-4 w-4" />
                     <span>{t('transactionTable_action_edit')}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive focus:text-destructive">
+                  <DropdownMenuItem onClick={() => handleDeleteClick(transaction)} className="text-destructive focus:text-destructive">
                     <Trash2 className="mr-2 h-4 w-4" />
                     <span>{t('transactionTable_action_delete')}</span>
                   </DropdownMenuItem>
