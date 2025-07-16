@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartContainer } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import { PieChart as PieChartIcon } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 interface ExpenseByCategoryChartProps {
   transactions: Transaction[];
@@ -25,13 +26,16 @@ const COLORS = [
 ];
 
 export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartProps) {
+  const { t } = useLanguage();
   const data = useMemo(() => {
     const today = new Date();
     const monthlyTransactions = transactions.filter(t => isSameMonth(new Date(t.date), today) && t.type === 'expense');
 
     const expenseByCategory = monthlyTransactions.reduce((acc, t) => {
+      const categoryKey = `categories_expense_${t.category.toLowerCase().replace(/\s+/g, '')}`;
+      const translatedCategory = t(categoryKey);
       if (!acc[t.category]) {
-        acc[t.category] = { name: t.category, value: 0 };
+        acc[t.category] = { name: translatedCategory, value: 0 };
       }
       acc[t.category].value += t.amount;
       return acc;
@@ -39,16 +43,19 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
     
     return Object.values(expenseByCategory).sort((a,b) => b.value - a.value);
 
-  }, [transactions]);
+  }, [transactions, t]);
 
   const totalExpense = useMemo(() => data.reduce((acc, item) => acc + item.value, 0), [data]);
+  const monthName = format(new Date(), 'MMMM');
+  const year = format(new Date(), 'yyyy');
+
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Expense by Category</CardTitle>
+        <CardTitle>{t('dashboard_expenseByCategory')}</CardTitle>
         <CardDescription>
-          Spending breakdown for {format(new Date(), 'MMMM yyyy')}
+          {t('dashboard_expenseByCategory_desc', { month: monthName, year: year })}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -108,8 +115,8 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
               <div className="rounded-full bg-background p-4 shadow">
                  <PieChartIcon className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold">No expense data</h3>
-              <p className="text-muted-foreground">No expenses recorded for this month.</p>
+              <h3 className="text-xl font-semibold">{t('reports_noExpenseData_title')}</h3>
+              <p className="text-muted-foreground">{t('dashboard_monthlyExpenses_desc', { month: monthName })}</p>
             </div>
         )}
       </CardContent>

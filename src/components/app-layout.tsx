@@ -20,10 +20,12 @@ import Logo from './logo';
 import { UserNav } from './user-nav';
 import { AddTransactionDialog } from './add-transaction-dialog';
 import { ThemeToggle } from './theme-toggle';
+import { useLanguage } from '@/context/language-context';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <SidebarProvider>
@@ -31,7 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2">
             <Logo />
-            <span className="text-lg font-semibold">Expense Tracker</span>
+            <span className="text-lg font-semibold">{t('app_title')}</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -40,11 +42,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton
                 asChild
                 isActive={pathname === '/dashboard'}
-                tooltip="Dashboard"
+                tooltip={t('sidebar_dashboard')}
               >
                 <Link href="/dashboard">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span>{t('sidebar_dashboard')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -52,11 +54,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton
                 asChild
                 isActive={pathname.startsWith('/dashboard/reports')}
-                tooltip="Reports"
+                tooltip={t('sidebar_reports')}
               >
                 <Link href="/dashboard/reports">
                   <LineChart />
-                  <span>Reports</span>
+                  <span>{t('sidebar_reports')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -68,7 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
              <SidebarTrigger className="md:hidden" />
              <h1 className="text-xl font-semibold">
-              {pathname.includes('reports') ? 'Reports' : 'Dashboard'}
+              {pathname.includes('reports') ? t('header_reports') : t('header_dashboard')}
              </h1>
           </div>
 
@@ -80,11 +82,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <span>
                 <Button onClick={() => setIsDialogOpen(true)} className="sm:hidden" variant="default" size="icon">
                   <PlusCircle className="h-4 w-4" />
-                  <span className="sr-only">New Transaction</span>
+                  <span className="sr-only">{t('newTransaction_button')}</span>
                 </Button>
                 <Button onClick={() => setIsDialogOpen(true)} className="hidden sm:inline-flex">
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  <span>New Transaction</span>
+                  <span>{t('newTransaction_button')}</span>
                 </Button>
               </span>
             </AddTransactionDialog>

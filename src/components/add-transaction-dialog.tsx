@@ -33,6 +33,7 @@ import { useData } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
 import { suggestExpenseCategory } from '@/ai/flows/suggest-expense-category';
 import { type Transaction } from '@/lib/types';
+import { useLanguage } from '@/context/language-context';
 
 const formSchema = z.object({
   type: z.enum(['income', 'expense']),
@@ -54,6 +55,7 @@ interface AddTransactionDialogProps {
 export function AddTransactionDialog({ open, onOpenChange, children, transaction }: AddTransactionDialogProps) {
   const { data, addTransaction, updateTransaction, addCategory } = useData();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isSuggesting, setIsSuggesting] = useState(false);
   const isEditMode = !!transaction;
 
@@ -115,15 +117,15 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
         }
 
         toast({
-          title: 'Category Suggested!',
-          description: `We've set the category to "${category}".`,
+          title: t('toast_suggestCategory_title'),
+          description: t('toast_suggestCategory_desc', { category }),
         });
       }
     } catch (error) {
       console.error(error);
       toast({
-        title: 'Suggestion Failed',
-        description: 'Could not suggest a category at this time.',
+        title: t('toast_suggestCategory_fail_title'),
+        description: t('toast_suggestCategory_fail_desc'),
         variant: 'destructive',
       });
     } finally {
@@ -140,8 +142,8 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
         date: values.date.toISOString(),
       });
       toast({
-        title: 'Transaction Updated',
-        description: 'Your transaction has been successfully updated.',
+        title: t('toast_transactionUpdated_title'),
+        description: t('toast_transactionUpdated_desc'),
       });
     } else {
       addTransaction({
@@ -149,12 +151,18 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
         date: values.date.toISOString(),
       });
       toast({
-        title: 'Transaction Added',
-        description: 'Your transaction has been successfully recorded.',
+        title: t('toast_transactionAdded_title'),
+        description: t('toast_transactionAdded_desc'),
       });
     }
 
     onOpenChange(false);
+  };
+  
+  const getTranslatedCategory = (category: string, type: 'income' | 'expense') => {
+    const key = `categories_${type}_${category.toLowerCase().replace(/\s+/g, '')}`;
+    const translated = t(key);
+    return translated === key ? category : translated;
   };
 
   return (
@@ -167,9 +175,9 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Edit Transaction' : 'Add New Transaction'}</DialogTitle>
+          <DialogTitle>{isEditMode ? t('addTransaction_title_edit') : t('addTransaction_title_add')}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? 'Update the details of your transaction.' : 'Enter the details of your income or expense below.'}
+            {isEditMode ? t('addTransaction_desc_edit') : t('addTransaction_desc_add')}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -182,11 +190,11 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
+                        <SelectValue placeholder={t('addTransaction_type_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="expense">Expense</SelectItem>
-                        <SelectItem value="income">Income</SelectItem>
+                        <SelectItem value="expense">{t('addTransaction_type_expense')}</SelectItem>
+                        <SelectItem value="income">{t('addTransaction_type_income')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -199,9 +207,9 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel>{t('addTransaction_amount_label')}</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="0.00" {...field} />
+                    <Input type="number" placeholder={t('addTransaction_amount_placeholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -212,9 +220,9 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t('addTransaction_description_label')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Coffee with friends" {...field} />
+                    <Input placeholder={t('addTransaction_description_placeholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -225,24 +233,24 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>{t('addTransaction_category_label')}</FormLabel>
                    <div className="flex gap-2">
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
+                          <SelectValue placeholder={t('addTransaction_category_placeholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {(transactionType === 'income' ? data.categories.income : data.categories.expense).map(cat => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          <SelectItem key={cat} value={cat}>{getTranslatedCategory(cat, transactionType)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     {transactionType === 'expense' && (
                        <Button type="button" variant="outline" size="icon" onClick={handleSuggestCategory} disabled={isSuggesting}>
                         {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4 text-primary" />}
-                        <span className="sr-only">Suggest Category</span>
+                        <span className="sr-only">{t('addTransaction_suggestCategory_button')}</span>
                       </Button>
                     )}
                   </div>
@@ -255,7 +263,7 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
+                  <FormLabel>{t('addTransaction_date_label')}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -269,7 +277,7 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
                           {field.value ? (
                             format(field.value, 'PPP')
                           ) : (
-                            <span>Pick a date</span>
+                            <span>{t('addTransaction_date_placeholder')}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -294,7 +302,7 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
             <DialogFooter>
               <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                {isEditMode ? 'Save Changes' : 'Add Transaction'}
+                {isEditMode ? t('addTransaction_button_edit') : t('addTransaction_button_add')}
               </Button>
             </DialogFooter>
           </form>

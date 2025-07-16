@@ -147,12 +147,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!authInstance) return Promise.reject(new Error("Firebase not initialized"));
     const userCredential = await createUserWithEmailAndPassword(authInstance, email, password);
     const user = userCredential.user;
+    const displayName = `${firstName} ${lastName}`.trim();
     await updateProfile(user, {
-        displayName: `${firstName} ${lastName}`,
+        displayName: displayName,
     });
     // The onAuthStateChanged listener will handle creating the user document.
     // We just need to update the user state locally for immediate feedback.
-    setUsername(`${firstName} ${lastName}`);
+    setUsername(displayName);
     setUser(user);
 
     return userCredential;

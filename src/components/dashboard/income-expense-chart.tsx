@@ -8,12 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartContainer } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import { TrendingUp } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 interface IncomeExpenseChartProps {
   transactions: Transaction[];
 }
 
 export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
+  const { t } = useLanguage();
   const data = useMemo(() => {
     const last30Days = subDays(new Date(), 29);
     const relevantTransactions = transactions.filter(t => isAfter(new Date(t.date), last30Days));
@@ -49,9 +51,9 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Income vs. Expense</CardTitle>
+        <CardTitle>{t('dashboard_incomeVsExpense')}</CardTitle>
         <CardDescription>
-          A visual overview of your income and expenses over the past 30 days.
+          {t('dashboard_incomeVsExpense_desc')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -59,11 +61,11 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
           <ChartContainer
             config={{
               income: {
-                label: "Income",
+                label: t('chart_income'),
                 color: "hsl(var(--chart-1))",
               },
               expense: {
-                label: "Expense",
+                label: t('chart_expense'),
                 color: "hsl(var(--chart-2))",
               },
             }}
@@ -91,7 +93,7 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="flex flex-col">
                                     <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                        Income
+                                        {t('chart_income')}
                                     </span>
                                     <span className="font-bold text-green-500">
                                         {formatCurrency(payload[0].value as number)}
@@ -99,7 +101,7 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
                                     </div>
                                     <div className="flex flex-col">
                                     <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                        Expense
+                                        {t('chart_expense')}
                                     </span>
                                     <span className="font-bold text-red-500">
                                         {formatCurrency(payload[1].value as number)}
@@ -123,8 +125,8 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
               <div className="rounded-full bg-background p-4 shadow">
                  <TrendingUp className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold">Not enough data</h3>
-              <p className="text-muted-foreground">There is not enough transaction data to display a chart.</p>
+              <h3 className="text-xl font-semibold">{t('chart_notEnoughData_title')}</h3>
+              <p className="text-muted-foreground">{t('chart_notEnoughData_desc')}</p>
             </div>
         )}
       </CardContent>

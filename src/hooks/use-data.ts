@@ -4,29 +4,41 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { doc, getDoc, setDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { type AppData, type Transaction } from '@/lib/types';
+import en from '@/locales/en.json';
+import bn from '@/locales/bn.json';
+
+const getBaseCategories = (locale: string): AppData['categories'] => {
+  const t = locale === 'bn' ? bn : en;
+  return {
+    income: [
+      "Salary",
+      "Bonus",
+      "Gifts",
+      "Freelance"
+    ],
+    expense: [
+      "Food",
+      "Transport",
+      "Utilities",
+      "House Rent",
+      "Entertainment",
+      "Health",
+      "Shopping",
+      "Other",
+      "Grocery",
+      "DPS",
+      "EMI",
+      "Medical",
+      "Electricity Bill",
+      "Gas Bill",
+      "Wifi Bill"
+    ],
+  }
+}
 
 const defaultData: AppData = {
   transactions: [],
-  categories: {
-    income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
-    expense: [
-      'Food',
-      'Transport',
-      'Utilities',
-      'House Rent',
-      'Entertainment',
-      'Health',
-      'Shopping',
-      'Other',
-      'Grocery',
-      'DPS',
-      'EMI',
-      'Medical',
-      'Electricity Bill',
-      'Gas Bill',
-      'Wifi Bill',
-    ],
-  },
+  categories: getBaseCategories('en'),
 };
 
 export function useData() {
@@ -45,9 +57,10 @@ export function useData() {
         if (docSnap.exists()) {
           const fetchedData = docSnap.data() as AppData;
            // Merge default categories with stored categories to ensure new categories are added
+          const baseCategories = getBaseCategories('en'); // Always merge with english base
           const mergedCategories = {
-            income: [...new Set([...defaultData.categories.income, ...(fetchedData.categories?.income || [])])],
-            expense: [...new Set([...defaultData.categories.expense, ...(fetchedData.categories?.expense || [])])],
+            income: [...new Set([...baseCategories.income, ...(fetchedData.categories?.income || [])])],
+            expense: [...new Set([...baseCategories.expense, ...(fetchedData.categories?.expense || [])])],
           };
           const sortedTransactions = (fetchedData.transactions || []).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           const updatedData = { ...fetchedData, categories: mergedCategories, transactions: sortedTransactions };

@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
+import { LanguageProvider } from '@/context/language-context';
 
 export const metadata: Metadata = {
   title: 'Expense Tracker - Personal Expense Tracker',
@@ -20,6 +21,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
          <ThemeProvider
@@ -29,7 +31,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <AuthProvider>
-              {children}
+              <LanguageProvider>
+                {children}
+              </LanguageProvider>
               <Toaster />
             </AuthProvider>
         </ThemeProvider>

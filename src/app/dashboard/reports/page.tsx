@@ -15,10 +15,12 @@ import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { formatCurrency } from '@/lib/utils';
 import { type Transaction } from '@/lib/types';
+import { useLanguage } from '@/context/language-context';
 
 
 export default function ReportsPage() {
   const { data, loading } = useData();
+  const { t } = useLanguage();
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 29),
     to: new Date(),
@@ -114,19 +116,19 @@ export default function ReportsPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Spending Report</CardTitle>
+            <CardTitle>{t('reports_title')}</CardTitle>
             <CardDescription>
-              Analyze your spending habits by category over a selected period.
+              {t('reports_desc')}
             </CardDescription>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={generatePDF} disabled={filteredTransactions.length === 0}>
                 <FileDown className="mr-2 h-4 w-4" />
-                PDF
+                {t('reports_pdf_button')}
             </Button>
             <Button variant="outline" onClick={generateExcel} disabled={filteredTransactions.length === 0}>
                 <FileType className="mr-2 h-4 w-4" />
-                Excel
+                {t('reports_excel_button')}
             </Button>
           </div>
         </CardHeader>
@@ -139,8 +141,8 @@ export default function ReportsPage() {
               <div className="rounded-full bg-background p-4 shadow">
                  <BarChart className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold">No expense data</h3>
-              <p className="text-muted-foreground">There are no expenses recorded in this period.</p>
+              <h3 className="text-xl font-semibold">{t('reports_noExpenseData_title')}</h3>
+              <p className="text-muted-foreground">{t('reports_noExpenseData_desc')}</p>
             </div>
           )}
         </CardContent>

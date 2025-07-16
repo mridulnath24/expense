@@ -10,12 +10,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/auth-context';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User,Languages, Check } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 export function UserNav() {
   const { user, username, logout } = useAuth();
+  const { locale, setLocale, t } = useLanguage();
   const userInitial = username ? username.charAt(0).toUpperCase() : '?';
 
   return (
@@ -31,16 +37,37 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Signed in as</p>
+            <p className="text-sm font-medium leading-none">{t('userNav_signedInAs')}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {username}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+           <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Languages className="mr-2 h-4 w-4" />
+              <span>{t('userNav_language')}</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => setLocale('en')}>
+                  <span className='w-4'>{locale === 'en' && <Check className="h-4 w-4" />}</span>
+                  <span className='ml-2'>English</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocale('bn')}>
+                   <span className='w-4'>{locale === 'bn' && <Check className="h-4 w-4" />}</span>
+                   <span className='ml-2'>বাংলা</span>
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>{t('userNav_logout')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

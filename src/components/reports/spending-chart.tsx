@@ -3,8 +3,9 @@
 import { useMemo } from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { type Transaction } from '@/lib/types';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
+import { useLanguage } from '@/context/language-context';
 
 
 interface SpendingChartProps {
@@ -12,28 +13,32 @@ interface SpendingChartProps {
 }
 
 export function SpendingChart({ transactions }: SpendingChartProps) {
+  const { t } = useLanguage();
+
   const data = useMemo(() => {
     const expenseByCategory = transactions
       .filter((t) => t.type === 'expense')
       .reduce((acc, t) => {
+        const categoryKey = `categories_expense_${t.category.toLowerCase().replace(/\s+/g, '')}`;
+        const translatedCategory = t(categoryKey);
+        
         if (!acc[t.category]) {
-          acc[t.category] = 0;
+          acc[t.category] = { name: translatedCategory, total: 0 };
         }
-        acc[t.category] += t.amount;
+        acc[t.category].total += t.amount;
         return acc;
-      }, {} as { [key: string]: number });
+      }, {} as { [key: string]: { name: string; total: number } });
 
-    return Object.entries(expenseByCategory)
-      .map(([name, total]) => ({ name, total }))
+    return Object.values(expenseByCategory)
       .sort((a, b) => b.total - a.total);
-  }, [transactions]);
+  }, [transactions, t]);
 
   return (
     <div className="h-[400px] w-full">
       <ChartContainer
         config={{
           total: {
-            label: "Total",
+            label: t('reports_spendingChart_amount'),
             color: "hsl(var(--primary))",
           },
         }}
@@ -62,7 +67,7 @@ export function SpendingChart({ transactions }: SpendingChartProps) {
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex flex-col">
                           <span className="text-[0.70rem] uppercase text-muted-foreground">
-                            Category
+                            {t('reports_spendingChart_category')}
                           </span>
                           <span className="font-bold text-foreground">
                             {data.name}
@@ -70,7 +75,7 @@ export function SpendingChart({ transactions }: SpendingChartProps) {
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[0.70rem] uppercase text-muted-foreground">
-                            Amount
+                            {t('reports_spendingChart_amount')}
                           </span>
                           <span className="font-bold text-foreground">
                             {formatCurrency(data.total)}

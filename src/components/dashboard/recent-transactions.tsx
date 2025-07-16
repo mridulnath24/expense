@@ -29,6 +29,7 @@ import { useData } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
 import { AddTransactionDialog } from '../add-transaction-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/context/language-context';
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -37,6 +38,7 @@ interface RecentTransactionsProps {
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   const { deleteTransaction } = useData();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -56,12 +58,18 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
     if (selectedTransaction) {
       deleteTransaction(selectedTransaction.id);
       toast({
-        title: 'Transaction Deleted',
-        description: 'The transaction has been successfully deleted.',
+        title: t('toast_transactionDeleted_title'),
+        description: t('toast_transactionDeleted_desc'),
       });
     }
     setIsDeleteDialogOpen(false);
     setSelectedTransaction(null);
+  };
+
+  const getTranslatedCategory = (category: string, type: 'income' | 'expense') => {
+    const key = `categories_${type}_${category.toLowerCase().replace(/\s+/g, '')}`;
+    const translated = t(key);
+    return translated === key ? category : translated;
   };
   
   const renderMobileView = () => (
@@ -71,7 +79,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                 <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-1">
                         <p className="font-medium">{t.description}</p>
-                        <p className="text-sm text-muted-foreground">{t.category}</p>
+                        <p className="text-sm text-muted-foreground">{getTranslatedCategory(t.category, t.type)}</p>
                          <p className="text-sm text-muted-foreground">{format(new Date(t.date), 'PP')}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -89,11 +97,11 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleEditClick(t)}>
                                     <Pencil className="mr-2 h-4 w-4" />
-                                    <span>Edit</span>
+                                    <span>{t('transactionTable_action_edit')}</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive focus:text-destructive">
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    <span>Delete</span>
+                                    <span>{t('transactionTable_action_delete')}</span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -108,10 +116,10 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Description</TableHead>
-          <TableHead className="hidden sm:table-cell">Category</TableHead>
-          <TableHead className="hidden md:table-cell">Date</TableHead>
-          <TableHead className="text-right">Amount</TableHead>
+          <TableHead>{t('transactionTable_col_description')}</TableHead>
+          <TableHead className="hidden sm:table-cell">{t('transactionTable_col_category')}</TableHead>
+          <TableHead className="hidden md:table-cell">{t('transactionTable_col_date')}</TableHead>
+          <TableHead className="text-right">{t('transactionTable_col_amount')}</TableHead>
           <TableHead className="w-[40px]">
             <span className="sr-only">Actions</span>
           </TableHead>
@@ -122,7 +130,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
           <TableRow key={t.id}>
             <TableCell className="font-medium">{t.description}</TableCell>
             <TableCell className="hidden sm:table-cell">
-              <Badge variant="outline">{t.category}</Badge>
+              <Badge variant="outline">{getTranslatedCategory(t.category, t.type)}</Badge>
             </TableCell>
             <TableCell className="hidden md:table-cell">{format(new Date(t.date), 'PP')}</TableCell>
             <TableCell
@@ -144,11 +152,11 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => handleEditClick(t)}>
                     <Pencil className="mr-2 h-4 w-4" />
-                    <span>Edit</span>
+                    <span>{t('transactionTable_action_edit')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-destructive focus:text-destructive">
                     <Trash2 className="mr-2 h-4 w-4" />
-                    <span>Delete</span>
+                    <span>{t('transactionTable_action_delete')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -163,7 +171,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle>{t('dashboard_recentTransactions')}</CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length > 0 ? (
@@ -173,8 +181,8 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               <div className="rounded-full bg-secondary p-4">
                  <ArrowRightLeft className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold">No transactions yet</h3>
-              <p className="text-muted-foreground">Add your first transaction to get started.</p>
+              <h3 className="text-xl font-semibold">{t('dashboard_noTransactions_title')}</h3>
+              <p className="text-muted-foreground">{t('dashboard_noTransactions_desc')}</p>
             </div>
           )}
         </CardContent>
@@ -191,15 +199,15 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialog_title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this transaction from your records.
+              {t('deleteDialog_desc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('deleteDialog_cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
-              Delete
+              {t('deleteDialog_delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
