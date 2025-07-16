@@ -29,15 +29,15 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
   const { t } = useLanguage();
   const data = useMemo(() => {
     const today = new Date();
-    const monthlyTransactions = transactions.filter(t => isSameMonth(new Date(t.date), today) && t.type === 'expense');
+    const monthlyTransactions = transactions.filter(transaction => isSameMonth(new Date(transaction.date), today) && transaction.type === 'expense');
 
-    const expenseByCategory = monthlyTransactions.reduce((acc, t) => {
-      const categoryKey = `categories_expense_${t.category.toLowerCase().replace(/\s+/g, '')}`;
+    const expenseByCategory = monthlyTransactions.reduce((acc, transaction) => {
+      const categoryKey = `categories_expense_${transaction.category.toLowerCase().replace(/\s+/g, '')}`;
       const translatedCategory = t(categoryKey);
-      if (!acc[t.category]) {
-        acc[t.category] = { name: translatedCategory, value: 0 };
+      if (!acc[transaction.category]) {
+        acc[transaction.category] = { name: translatedCategory === categoryKey ? transaction.category : translatedCategory, value: 0 };
       }
-      acc[t.category].value += t.amount;
+      acc[transaction.category].value += transaction.amount;
       return acc;
     }, {} as Record<string, { name: string; value: number }>);
     
