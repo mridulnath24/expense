@@ -31,7 +31,6 @@ import { CalendarIcon, Loader2, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { useData } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
-import { suggestExpenseCategory } from '@/ai/flows/suggest-expense-category';
 import { type Transaction } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
 
@@ -53,10 +52,9 @@ interface AddTransactionDialogProps {
 }
 
 export function AddTransactionDialog({ open, onOpenChange, children, transaction }: AddTransactionDialogProps) {
-  const { data, addTransaction, updateTransaction, addCategory } = useData();
+  const { data, addTransaction, updateTransaction } = useData();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const [isSuggesting, setIsSuggesting] = useState(false);
   const isEditMode = !!transaction;
 
   const form = useForm<FormValues>({
@@ -89,50 +87,6 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
 
 
   const transactionType = form.watch('type');
-
-  const handleSuggestCategory = async () => {
-    const description = form.getValues('description');
-    if (!description) {
-      toast({
-        title: 'Description needed',
-        description: 'Please enter a description to suggest a category.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsSuggesting(true);
-    try {
-      const result = await suggestExpenseCategory({ 
-        expenseDescription: description,
-        categories: data.categories.expense,
-       });
-      if (result.suggestedCategory) {
-        const category = result.suggestedCategory;
-        form.setValue('category', category, { shouldValidate: true });
-
-        // Add to category list if it's new
-        if (!data.categories.expense.includes(category)) {
-          addCategory('expense', category);
-        }
-
-        toast({
-          title: t('toast_suggestCategory_title'),
-          description: t('toast_suggestCategory_desc', { category }),
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: t('toast_suggestCategory_fail_title'),
-        description: t('toast_suggestCategory_fail_desc'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSuggesting(false);
-    }
-  };
-
 
   const onSubmit = (values: FormValues) => {
     if (isEditMode && transaction) {
@@ -247,12 +201,6 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
                         ))}
                       </SelectContent>
                     </Select>
-                    {transactionType === 'expense' && (
-                       <Button type="button" variant="outline" size="icon" onClick={handleSuggestCategory} disabled={isSuggesting}>
-                        {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin"/> : <Sparkles className="h-4 w-4 text-primary" />}
-                        <span className="sr-only">{t('addTransaction_suggestCategory_button')}</span>
-                      </Button>
-                    )}
                   </div>
                   <FormMessage />
                 </FormItem>
