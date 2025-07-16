@@ -39,23 +39,28 @@ export type SuggestExpenseCategoryOutput = z.infer<
   typeof SuggestExpenseCategoryOutputSchema
 >;
 
-// Define the tool for the AI to use for providing the category suggestion.
-const categorySuggestionTool = ai.defineTool(
-  {
-    name: 'provideCategorySuggestion',
-    description:
-      'Provides a category suggestion for the expense description.',
-    inputSchema: SuggestExpenseCategoryOutputSchema,
-    outputSchema: SuggestExpenseCategoryOutputSchema,
-  },
-  async (suggestion) => suggestion // The tool just returns the data it receives.
-);
-
 export async function suggestExpenseCategory(
   input: SuggestExpenseCategoryInput
 ): Promise<SuggestExpenseCategoryOutput> {
   return suggestExpenseCategoryFlow(input);
 }
+
+const suggestExpenseCategoryPrompt = ai.definePrompt(
+  {
+    name: 'suggestExpenseCategoryPrompt',
+    input: { schema: SuggestExpenseCategoryInputSchema },
+    output: { schema: SuggestExpenseCategoryOutputSchema },
+    prompt: `You are an expert financial assistant. Your task is to categorize an expense based on its description. You must choose a category from the provided list.
+
+Expense Description: {{{expenseDescription}}}
+
+Available Categories:
+- {{#each categories}}{{{this}}}{{/each}}
+
+Based on the description, provide the most appropriate category and a confidence score.`,
+  }
+);
+
 
 const suggestExpenseCategoryFlow = ai.defineFlow(
   {
@@ -63,35 +68,13 @@ const suggestExpenseCategoryFlow = ai.defineFlow(
     inputSchema: SuggestExpenseCategoryInputSchema,
     outputSchema: SuggestExpenseCategoryOutputSchema,
   },
-  async input => {
-    const llmResponse = await ai.generate({
-      model: 'googleai/gemini-2.0-flash',
-      tools: [categorySuggestionTool],
-      prompt: `You are an expert financial assistant. Your task is to categorize an expense based on its description. You must choose a category from the provided list.
+  async (input) => {
+    const { output } = await suggestExpenseCategoryPrompt(input);
 
-Expense Description: ${input.expenseDescription}
-
-Available Categories:
-- ${input.categories.join('\n- ')}
-
-Based on the description, call the provideCategorySuggestion tool with the most appropriate category and a confidence score.`,
-    });
-
-    const toolRequest = llmResponse.toolRequest;
-    if (
-      toolRequest &&
-      toolRequest.name === 'provideCategorySuggestion' &&
-      toolRequest.input
-    ) {
-      // The model correctly used the tool.
-      // We can now safely parse the input to the tool.
-      const suggestion = SuggestExpenseCategoryOutputSchema.parse(
-        toolRequest.input
-      );
-      return suggestion;
+    if (!output) {
+      throw new Error('AI failed to provide a valid suggestion.');
     }
 
-    // If the model fails to use the tool, we throw an error.
-    throw new Error('AI failed to provide a valid suggestion.');
+    return output;
   }
 );
