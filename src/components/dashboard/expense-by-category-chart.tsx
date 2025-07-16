@@ -108,7 +108,7 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
-                        <Legend content={<></>} />
+                        <Legend content={() => null} />
                     </PieChart>
                 </ResponsiveContainer>
             </ChartContainer>
