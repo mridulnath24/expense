@@ -9,7 +9,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {generate} from 'genkit/ai';
 import {z} from 'genkit';
 
 const SuggestExpenseCategoryInputSchema = z.object({
@@ -65,8 +64,8 @@ const suggestExpenseCategoryFlow = ai.defineFlow(
     outputSchema: SuggestExpenseCategoryOutputSchema,
   },
   async input => {
-    const llmResponse = await generate({
-      model: ai.getModel(),
+    const llmResponse = await ai.generate({
+      model: 'googleai/gemini-2.0-flash',
       tools: [categorySuggestionTool],
       prompt: `You are an expert financial assistant. Your task is to categorize an expense based on its description. You must choose a category from the provided list.
 
