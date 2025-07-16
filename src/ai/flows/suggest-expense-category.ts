@@ -48,7 +48,7 @@ export async function suggestExpenseCategory(
 const prompt = ai.definePrompt({
   name: 'suggestExpenseCategoryPrompt',
   input: {schema: SuggestExpenseCategoryInputSchema},
-  output: {schema: SuggestExpenseCategoryOutputSchema},
+  output: {format: 'json', schema: SuggestExpenseCategoryOutputSchema},
   prompt: `You are an expert financial assistant. Your task is to categorize an expense based on its description. You must choose a category from the provided list.
 
 You MUST output your response in a valid JSON object format, containing 'suggestedCategory' and 'confidence'. Do not include any other text or explanations outside of the JSON object.
@@ -77,10 +77,30 @@ const suggestExpenseCategoryFlow = ai.defineFlow(
     outputSchema: SuggestExpenseCategoryOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const response = await prompt(input);
+    let output = response.output;
+
     if (!output) {
-      throw new Error('AI failed to provide a suggestion.');
+      // Fallback: try to parse JSON from raw text if structured output fails
+      const rawText = response.text;
+      if (rawText) {
+        try {
+          const jsonMatch = rawText.match(/```json\n([\s\S]*?)\n```|({[\s\S]*})/);
+          if (jsonMatch) {
+            const jsonString = jsonMatch[1] || jsonMatch[2];
+            const parsed = JSON.parse(jsonString);
+            output = SuggestExpenseCategoryOutputSchema.parse(parsed);
+          }
+        } catch (e) {
+            console.error("Failed to parse JSON from raw text:", e);
+        }
+      }
     }
+
+    if (!output) {
+      throw new Error('AI failed to provide a valid suggestion.');
+    }
+    
     return output;
   }
 );
