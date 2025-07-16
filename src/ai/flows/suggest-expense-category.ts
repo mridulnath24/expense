@@ -9,6 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {generate} from 'genkit/ai';
 import {z} from 'genkit';
 
 const SuggestExpenseCategoryInputSchema = z.object({
@@ -39,36 +40,23 @@ export type SuggestExpenseCategoryOutput = z.infer<
   typeof SuggestExpenseCategoryOutputSchema
 >;
 
+// Define the tool for the AI to use for providing the category suggestion.
+const categorySuggestionTool = ai.defineTool(
+  {
+    name: 'provideCategorySuggestion',
+    description:
+      'Provides a category suggestion for the expense description.',
+    inputSchema: SuggestExpenseCategoryOutputSchema,
+    outputSchema: z.void(),
+  },
+  async () => {} // The tool itself doesn't need to do anything, it's just a data structure.
+);
+
 export async function suggestExpenseCategory(
   input: SuggestExpenseCategoryInput
 ): Promise<SuggestExpenseCategoryOutput> {
   return suggestExpenseCategoryFlow(input);
 }
-
-const prompt = ai.definePrompt({
-  name: 'suggestExpenseCategoryPrompt',
-  input: {schema: SuggestExpenseCategoryInputSchema},
-  output: {format: 'json', schema: SuggestExpenseCategoryOutputSchema},
-  prompt: `You are an expert financial assistant. Your task is to categorize an expense based on its description. You must choose a category from the provided list.
-
-You MUST output your response in a valid JSON object format, containing 'suggestedCategory' and 'confidence'. Do not include any other text or explanations outside of the JSON object.
-
-Here is an example of a valid response:
-{
-  "suggestedCategory": "Food",
-  "confidence": 0.9
-}
-
-Now, categorize the following expense:
-
-Expense Description: {{{expenseDescription}}}
-
-Available Categories:
-{{#each categories}}
-- {{{this}}}
-{{/each}}
-`,
-});
 
 const suggestExpenseCategoryFlow = ai.defineFlow(
   {
@@ -77,30 +65,34 @@ const suggestExpenseCategoryFlow = ai.defineFlow(
     outputSchema: SuggestExpenseCategoryOutputSchema,
   },
   async input => {
-    const response = await prompt(input);
-    let output = response.output;
+    const llmResponse = await generate({
+      model: ai.getModel(),
+      tools: [categorySuggestionTool],
+      prompt: `You are an expert financial assistant. Your task is to categorize an expense based on its description. You must choose a category from the provided list.
 
-    if (!output) {
-      // Fallback: try to parse JSON from raw text if structured output fails
-      const rawText = response.text;
-      if (rawText) {
-        try {
-          const jsonMatch = rawText.match(/```json\n([\s\S]*?)\n```|({[\s\S]*})/);
-          if (jsonMatch) {
-            const jsonString = jsonMatch[1] || jsonMatch[2];
-            const parsed = JSON.parse(jsonString);
-            output = SuggestExpenseCategoryOutputSchema.parse(parsed);
-          }
-        } catch (e) {
-            console.error("Failed to parse JSON from raw text:", e);
-        }
-      }
+Expense Description: ${input.expenseDescription}
+
+Available Categories:
+${input.categories.join('\n- ')}
+
+Based on the description, call the provideCategorySuggestion tool with the most appropriate category and a confidence score.`,
+    });
+
+    const toolRequest = llmResponse.toolRequest();
+    if (
+      toolRequest &&
+      toolRequest.name === 'provideCategorySuggestion' &&
+      toolRequest.input
+    ) {
+      // The model correctly used the tool.
+      // We can now safely parse the input to the tool.
+      const suggestion = SuggestExpenseCategoryOutputSchema.parse(
+        toolRequest.input
+      );
+      return suggestion;
     }
 
-    if (!output) {
-      throw new Error('AI failed to provide a valid suggestion.');
-    }
-    
-    return output;
+    // If the model fails to use the tool, we throw an error.
+    throw new Error('AI failed to provide a valid suggestion.');
   }
 );
