@@ -19,6 +19,7 @@ import {
 import { getFirestore, doc, setDoc, getDoc, type Firestore } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import { type AppData } from '@/lib/types';
+import firebaseConfig from '@/lib/firebase-config.json';
 
 const defaultData: AppData = {
   transactions: [],
@@ -72,18 +73,9 @@ const initializeFirebase = (): { auth: Auth | null, db: Firestore | null } => {
         return { auth: null, db: null };
     }
     
-    const firebaseConfig: FirebaseOptions = {
-      apiKey: "AIzaSyDF18X5a625XGsA1sgaICXWpS2dY4Y4m_c",
-      authDomain: "expense-tracker-app-1f50d.firebaseapp.com",
-      projectId: "expense-tracker-app-1f50d",
-      storageBucket: "expense-tracker-app-1f50d.appspot.com",
-      messagingSenderId: "935484828246",
-      appId: "1:935484828246:web:29e3f332c7d782e62a69f7",
-    };
-
     if (!getApps().length) {
         try {
-            app = initializeApp(firebaseConfig);
+            app = initializeApp(firebaseConfig as FirebaseOptions);
             auth = getAuth(app);
             db = getFirestore(app);
         } catch (e) {
