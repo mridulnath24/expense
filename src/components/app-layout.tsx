@@ -95,6 +95,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <footer className="py-4 px-4 sm:px-6">
+            <p className="text-center text-sm text-muted-foreground">
+                Developed by Mridul Debnath
+            </p>
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   );
