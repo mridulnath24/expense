@@ -14,6 +14,7 @@ import {
   FacebookAuthProvider,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, type Firestore } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
@@ -53,6 +54,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<any>;
   signInWithFacebook: () => Promise<any>;
   logout: () => void;
+  sendPasswordReset: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -181,6 +183,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut(authInstance);
   };
 
+  const sendPasswordReset = (email: string) => {
+    if (!authInstance) return Promise.reject(new Error("Firebase not initialized"));
+    return sendPasswordResetEmail(authInstance, email);
+  }
+
   if (loading) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -203,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, username, loading, db: dbInstance, signIn, signUp, signInWithGoogle, signInWithFacebook, logout }}>
+    <AuthContext.Provider value={{ user, username, loading, db: dbInstance, signIn, signUp, signInWithGoogle, signInWithFacebook, logout, sendPasswordReset }}>
       {children}
     </AuthContext.Provider>
   );

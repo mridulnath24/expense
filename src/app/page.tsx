@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import Logo from '@/components/logo';
+import { useToast } from '@/hooks/use-toast';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
@@ -35,8 +36,9 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
   
-  const { user, loading, signIn, signUp, signInWithGoogle, signInWithFacebook } = useAuth();
+  const { user, loading, signIn, signUp, signInWithGoogle, signInWithFacebook, sendPasswordReset } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -98,6 +100,26 @@ export default function AuthPage() {
     }
   };
 
+  const handlePasswordReset = async () => {
+    setError('');
+    if (!email.trim()) {
+        setError('Please enter your email address to reset your password.');
+        return;
+    }
+    setIsProcessing(true);
+    try {
+        await sendPasswordReset(email);
+        toast({
+            title: 'Password Reset Email Sent',
+            description: 'Check your inbox for instructions to reset your password.',
+        });
+    } catch (err: any) {
+        setError(err.message || 'Failed to send password reset email.');
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
 
   if (loading || user) {
     return (
@@ -129,7 +151,12 @@ export default function AuthPage() {
                   <Input id="signin-email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="signin-password">Password</Label>
+                        <Button variant="link" className="h-auto p-0 text-xs" onClick={handlePasswordReset}>
+                            Forgot Password?
+                        </Button>
+                    </div>
                   <Input id="signin-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
                  {error && <p className="text-sm font-medium text-destructive">{error}</p>}
