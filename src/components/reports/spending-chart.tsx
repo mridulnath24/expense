@@ -17,15 +17,15 @@ export function SpendingChart({ transactions }: SpendingChartProps) {
 
   const data = useMemo(() => {
     const expenseByCategory = transactions
-      .filter((t) => t.type === 'expense')
-      .reduce((acc, t) => {
-        const categoryKey = `categories_expense_${t.category.toLowerCase().replace(/\s+/g, '')}`;
+      .filter((transaction) => transaction.type === 'expense')
+      .reduce((acc, transaction) => {
+        const categoryKey = `categories_expense_${transaction.category.toLowerCase().replace(/\s+/g, '')}`;
         const translatedCategory = t(categoryKey);
         
-        if (!acc[t.category]) {
-          acc[t.category] = { name: translatedCategory, total: 0 };
+        if (!acc[transaction.category]) {
+          acc[transaction.category] = { name: translatedCategory, total: 0 };
         }
-        acc[t.category].total += t.amount;
+        acc[transaction.category].total += transaction.amount;
         return acc;
       }, {} as { [key: string]: { name: string; total: number } });
 
