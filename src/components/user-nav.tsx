@@ -16,7 +16,7 @@ import {
   DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/auth-context';
-import { LogOut, User,Languages, Check } from 'lucide-react';
+import { LogOut, Languages, Check } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 
 export function UserNav() {
