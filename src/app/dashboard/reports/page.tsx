@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { DateRange } from 'react-day-picker';
-import { subDays, format } from 'date-fns';
+import { subDays, format, startOfMonth, endOfMonth, parse } from 'date-fns';
 import { useData } from '@/hooks/use-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { SpendingChart } from '@/components/reports/spending-chart';
@@ -30,6 +30,37 @@ export default function ReportsPage() {
   });
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  
+  const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
+    setDateRange(newDateRange);
+    setSelectedMonth(''); // Clear month selection when custom date range is used
+  };
+
+  const availableMonths = useMemo(() => {
+    const monthSet = new Set<string>();
+    data.transactions.forEach(t => {
+      monthSet.add(format(new Date(t.date), 'yyyy-MM'));
+    });
+    return Array.from(monthSet).sort().reverse();
+  }, [data.transactions]);
+
+  const handleMonthChange = (month: string) => {
+    if (!month) {
+        setSelectedMonth('');
+        setDateRange({
+            from: subDays(new Date(), 29),
+            to: new Date(),
+        });
+        return;
+    }
+    setSelectedMonth(month);
+    const monthDate = parse(month, 'yyyy-MM', new Date());
+    setDateRange({
+      from: startOfMonth(monthDate),
+      to: endOfMonth(monthDate),
+    });
+  };
 
   const { filteredTransactions, totalIncome, totalExpense } = useMemo(() => {
     const from = dateRange?.from ? new Date(dateRange.from.setHours(0,0,0,0)) : undefined;
@@ -184,8 +215,21 @@ export default function ReportsPage() {
         <CardContent className="space-y-6">
           <div className="rounded-lg border p-4 space-y-4">
               <p className="text-sm font-medium text-muted-foreground">{t('reports_filters')}</p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <DateRangePicker dateRange={dateRange} setDateRange={handleDateRangeChange} />
+                    <Select value={selectedMonth} onValueChange={handleMonthChange}>
+                        <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue placeholder={t('reports_filter_month_placeholder')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                             <SelectItem value="">{t('reports_filter_month_all')}</SelectItem>
+                            {availableMonths.map(month => (
+                                <SelectItem key={month} value={month}>{format(parse(month, 'yyyy-MM', new Date()), 'MMMM yyyy')}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="flex gap-4">
                   <Select value={typeFilter} onValueChange={handleTypeChange}>
                       <SelectTrigger className="w-full sm:w-[180px]">

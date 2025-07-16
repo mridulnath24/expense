@@ -67,6 +67,8 @@
     "reports_filter_type_all": "সব ধরনের",
     "reports_filter_category_placeholder": "বিভাগ দ্বারা ফিল্টার করুন",
     "reports_filter_category_all": "সমস্ত বিভাগ",
+    "reports_filter_month_placeholder": "মাস দ্বারা ফিল্টার করুন",
+    "reports_filter_month_all": "একটি মাস নির্বাচন করুন",
     "reports_col_type": "প্রকার",
     "reports_dateRange": "তারিখের সীমা",
     "reports_spendingByCategory_title": "বিভাগ দ্বারা ব্যয়",
@@ -138,5 +140,3 @@
     "categories_expense_gasBill": "গ্যাস বিল",
     "categories_expense_wifiBill": "ওয়াইফাই বিল"
 }
-
-    

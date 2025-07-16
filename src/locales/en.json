@@ -67,6 +67,8 @@
     "reports_filter_type_all": "All Types",
     "reports_filter_category_placeholder": "Filter by category",
     "reports_filter_category_all": "All Categories",
+    "reports_filter_month_placeholder": "Filter by month",
+    "reports_filter_month_all": "Select a month",
     "reports_col_type": "Type",
     "reports_dateRange": "Date Range",
     "reports_spendingByCategory_title": "Spending by Category",
@@ -138,5 +140,3 @@
     "categories_expense_gasBill": "Gas Bill",
     "categories_expense_wifiBill": "Wifi Bill"
 }
-
-    
