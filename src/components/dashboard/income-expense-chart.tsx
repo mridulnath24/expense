@@ -16,7 +16,7 @@ interface IncomeExpenseChartProps {
 
 export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
   const { t } = useLanguage();
-  const data = useMemo(() => {
+  const { data, yAxisDomain, yAxisTicks } = useMemo(() => {
     const last30Days = subDays(new Date(), 29);
     const relevantTransactions = transactions.filter(t => isAfter(new Date(t.date), last30Days));
 
@@ -33,18 +33,21 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
       return acc;
     }, {} as Record<string, { date: string; income: number; expense: number }>);
     
-    const chartData = [];
+    let chartData = [];
+    let maxVal = 0;
     for (let i = 0; i < 30; i++) {
         const date = subDays(new Date(), i);
         const dayKey = format(date, 'MMM d');
-        if (groupedData[dayKey]) {
-            chartData.push(groupedData[dayKey]);
-        } else {
-            chartData.push({ date: dayKey, income: 0, expense: 0 });
-        }
+        const dayData = groupedData[dayKey] || { date: dayKey, income: 0, expense: 0 };
+        chartData.push(dayData);
+        if(dayData.income > maxVal) maxVal = dayData.income;
+        if(dayData.expense > maxVal) maxVal = dayData.expense;
     }
 
-    return chartData.reverse();
+    const yDomain: [number, number] = [0, maxVal > 0 ? maxVal * 1.1 : 100];
+    const ticks = [0, yDomain[1] * 0.25, yDomain[1] * 0.5, yDomain[1] * 0.75, yDomain[1]];
+    
+    return { data: chartData.reverse(), yAxisDomain: yDomain, yAxisTicks: ticks };
 
   }, [transactions]);
 
@@ -76,14 +79,23 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
                     data={data}
                     margin={{
                         top: 10,
-                        right: 30,
-                        left: 0,
+                        right: 10,
+                        left: -10,
                         bottom: 0,
                     }}
                 >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => formatCurrency(value as number).slice(1)} />
+                    <YAxis 
+                        stroke="hsl(var(--foreground))" 
+                        fontSize={12} 
+                        tickLine={false} 
+                        axisLine={false} 
+                        tickFormatter={(value) => formatCurrency(value as number)}
+                        domain={yAxisDomain}
+                        ticks={yAxisTicks}
+                        width={80}
+                    />
                     <Tooltip
                         content={({ active, payload }) => {
                             if (active && payload && payload.length) {

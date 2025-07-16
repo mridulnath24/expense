@@ -217,5 +217,3 @@ export function ReportsDataTable({ transactions }: ReportsDataTableProps) {
     </>
   );
 }
-
-    

@@ -34,10 +34,11 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
     const expenseByCategory = monthlyTransactions.reduce((acc, transaction) => {
       const categoryKey = `categories_expense_${transaction.category.toLowerCase().replace(/\s+/g, '')}`;
       const translatedCategory = t(categoryKey);
-      if (!acc[transaction.category]) {
-        acc[transaction.category] = { name: translatedCategory === categoryKey ? transaction.category : translatedCategory, value: 0 };
+      const name = translatedCategory === categoryKey ? transaction.category : translatedCategory;
+      if (!acc[name]) {
+        acc[name] = { name: name, value: 0 };
       }
-      acc[transaction.category].value += transaction.amount;
+      acc[name].value += transaction.amount;
       return acc;
     }, {} as Record<string, { name: string; value: number }>);
     
@@ -85,19 +86,20 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
                             nameKey="name"
                             cx="50%"
                             cy="50%"
-                            outerRadius={100}
+                            outerRadius={80}
+                            innerRadius={50}
                             fill="#8884d8"
                             labelLine={false}
                             label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
                                 const RADIAN = Math.PI / 180;
-                                const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                const radius = innerRadius + (outerRadius - innerRadius) * 1.5;
                                 const x = cx + radius * Math.cos(-midAngle * RADIAN);
                                 const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
                                 return (
                                     (percent*100) > 5 ? (
-                                    <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-                                    {`${(percent * 100).toFixed(0)}%`}
+                                    <text x={x} y={y} fill="hsl(var(--foreground))" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="text-xs">
+                                     {data[index].name} ({(percent * 100).toFixed(0)}%)
                                     </text>
                                 ) : null)
                             }}
@@ -106,7 +108,7 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
-                        <Legend wrapperStyle={{fontSize: '0.8rem'}}/>
+                        <Legend content={<></>} />
                     </PieChart>
                 </ResponsiveContainer>
             </ChartContainer>
