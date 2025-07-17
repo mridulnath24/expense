@@ -65,6 +65,9 @@ const parseTransactionFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("Failed to parse transaction from text");
+    }
+    return output;
   }
 );

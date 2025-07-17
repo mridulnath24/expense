@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview An AI flow to query transactions based on natural language.
- * - queryTransactions - A function that filters transactions based on a user's query.
+ * - queryTransactions - a function that filters transactions based on a user's query.
  * - QueryTransactionsInput - The input type for the queryTransactions function.
  * - QueryTransactionsOutput - The return type for the queryTransactions function.
  */
@@ -71,6 +71,9 @@ const queryTransactionsFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    return output!;
+    if (!output) {
+        throw new Error("Failed to query transactions");
+    }
+    return output;
   }
 );

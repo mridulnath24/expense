@@ -1,6 +1,5 @@
 'use client';
 
-import 'regenerator-runtime/runtime';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -103,6 +102,7 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
     if (!listening && transcript) {
       handleParseTranscript();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listening, transcript]);
   
   const handleVoiceListen = () => {
