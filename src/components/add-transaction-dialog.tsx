@@ -33,6 +33,7 @@ import { useData } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
 import { type Transaction } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
+import { suggestExpenseCategory } from '@/ai/flows/suggest-expense-category';
 
 const formSchema = z.object({
   type: z.enum(['income', 'expense']),
@@ -56,6 +57,7 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
   const { toast } = useToast();
   const { t } = useLanguage();
   const isEditMode = !!transaction;
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -87,6 +89,40 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
 
 
   const transactionType = form.watch('type');
+  const descriptionValue = form.watch('description');
+
+  const handleSuggestCategory = async () => {
+    if (!descriptionValue) return;
+    setIsSuggesting(true);
+    try {
+      const result = await suggestExpenseCategory({
+        description: descriptionValue,
+        categories: data.categories.expense,
+      });
+      if (result.category && data.categories.expense.includes(result.category)) {
+        form.setValue('category', result.category);
+        toast({
+          title: t('toast_suggestCategory_title'),
+          description: t('toast_suggestCategory_desc', { category: result.category }),
+        });
+      } else {
+         toast({
+          title: t('toast_suggestCategory_fail_title'),
+          description: t('toast_suggestCategory_fail_desc'),
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to suggest category:', error);
+      toast({
+        title: t('toast_suggestCategory_fail_title'),
+        description: t('toast_suggestCategory_fail_desc'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
 
   const onSubmit = (values: FormValues) => {
     if (isEditMode && transaction) {
@@ -201,6 +237,18 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
                         ))}
                       </SelectContent>
                     </Select>
+                     {transactionType === 'expense' && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={handleSuggestCategory}
+                          disabled={isSuggesting || !descriptionValue}
+                          title={t('addTransaction_suggestCategory_button')}
+                        >
+                          {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                        </Button>
+                      )}
                   </div>
                   <FormMessage />
                 </FormItem>
