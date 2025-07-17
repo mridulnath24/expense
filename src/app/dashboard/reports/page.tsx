@@ -53,8 +53,14 @@ export default function ReportsPage() {
   };
 
   const availableYears = useMemo(() => {
+    if (data.transactions.length === 0) {
+      return [getYear(new Date())];
+    }
     const transactionYears = data.transactions.map(t => getYear(new Date(t.date)));
-    const uniqueYears = [...new Set(transactionYears), getYear(new Date())];
+    const uniqueYears = [...new Set(transactionYears)];
+    if (!uniqueYears.includes(getYear(new Date()))) {
+      uniqueYears.push(getYear(new Date()));
+    }
     return uniqueYears.sort((a,b) => b - a);
   }, [data.transactions]);
 
