@@ -9,7 +9,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { AppData } from '@/lib/types';
 
 const allExpenseCategories = [
   "Food",
@@ -29,13 +28,13 @@ const allExpenseCategories = [
   "Wifi Bill"
 ];
 
-export const SuggestExpenseCategoryInputSchema = z.object({
+const SuggestExpenseCategoryInputSchema = z.object({
   description: z.string().describe('The description of the expense transaction.'),
   categories: z.array(z.string()).default(allExpenseCategories).describe('The list of available expense categories.'),
 });
 export type SuggestExpenseCategoryInput = z.infer<typeof SuggestExpenseCategoryInputSchema>;
 
-export const SuggestExpenseCategoryOutputSchema = z.object({
+const SuggestExpenseCategoryOutputSchema = z.object({
   category: z.string().describe('The suggested category for the expense.'),
 });
 export type SuggestExpenseCategoryOutput = z.infer<typeof SuggestExpenseCategoryOutputSchema>;
