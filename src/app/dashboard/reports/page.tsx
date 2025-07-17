@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
 import { DateRange } from 'react-day-picker';
-import { subDays, format, startOfMonth, endOfMonth, parse } from 'date-fns';
+import { subDays, format, startOfMonth, endOfMonth, parse, getYear, setMonth, setYear } from 'date-fns';
 import { useData } from '@/hooks/use-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { SpendingChart } from '@/components/reports/spending-chart';
@@ -25,25 +24,30 @@ export default function ReportsPage() {
   const { data, loading } = useData();
   const { t } = useLanguage();
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 29),
-    to: new Date(),
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
   });
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [selectedMonth, setSelectedMonth] = useState<string>('all-months');
+  const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   
   const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
     setDateRange(newDateRange);
-    setSelectedMonth('all-months'); // Clear month selection when custom date range is used
+    if(newDateRange?.from) {
+        setSelectedMonth(format(newDateRange.from, 'yyyy-MM'));
+    } else {
+        setSelectedMonth('all-months'); 
+    }
   };
 
   const availableMonths = useMemo(() => {
-    const monthSet = new Set<string>();
-    data.transactions.forEach(t => {
-      monthSet.add(format(new Date(t.date), 'yyyy-MM'));
-    });
-    return Array.from(monthSet).sort().reverse();
-  }, [data.transactions]);
+    const currentYear = getYear(new Date());
+    const months = [];
+    for(let i=0; i < 12; i++) {
+        months.push(format(setMonth(new Date(), i), 'yyyy-MM'));
+    }
+    return months;
+  }, []);
 
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month);
@@ -214,8 +218,8 @@ export default function ReportsPage() {
         <CardContent className="space-y-6">
           <div className="rounded-lg border p-4 space-y-4">
               <p className="text-sm font-medium text-muted-foreground">{t('reports_filters')}</p>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="flex flex-col sm:flex-row gap-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="flex flex-col sm:flex-row gap-4 lg:col-span-2">
                     <DateRangePicker dateRange={dateRange} setDateRange={handleDateRangeChange} />
                     <Select value={selectedMonth} onValueChange={handleMonthChange}>
                         <SelectTrigger className="w-full sm:w-[180px]">
@@ -229,7 +233,7 @@ export default function ReportsPage() {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex gap-4 lg:col-span-2">
                   <Select value={typeFilter} onValueChange={handleTypeChange}>
                       <SelectTrigger className="w-full sm:w-[180px]">
                           <SelectValue placeholder={t('reports_filter_type_placeholder')} />
