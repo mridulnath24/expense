@@ -11,6 +11,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['Inter', 'Hind Siliguri', 'sans-serif'],
+        bengali: ['Kalpurush', 'Hind Siliguri', 'sans-serif'],
         headline: ['Inter', 'Hind Siliguri', 'sans-serif'],
         code: ['monospace'],
       },
