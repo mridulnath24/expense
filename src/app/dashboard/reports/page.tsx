@@ -19,6 +19,7 @@ import { useLanguage } from '@/context/language-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ReportsDataTable } from '@/components/reports/reports-data-table';
 import { Separator } from '@/components/ui/separator';
+import { SmartSearch } from '@/components/dashboard/smart-search';
 
 export default function ReportsPage() {
   const { data, loading } = useData();
@@ -196,6 +197,8 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
+      <SmartSearch allTransactions={data.transactions} />
+
       <Card>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
