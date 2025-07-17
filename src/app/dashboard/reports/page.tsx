@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -30,29 +31,46 @@ export default function ReportsPage() {
   });
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  
+  const [selectedYear, setSelectedYear] = useState<string>(getYear(new Date()).toString());
   const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   
   const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
     setDateRange(newDateRange);
     if(newDateRange?.from) {
+        setSelectedYear(getYear(newDateRange.from).toString());
         setSelectedMonth(format(newDateRange.from, 'yyyy-MM'));
     } else {
         setSelectedMonth('all-months'); 
     }
   };
 
+  const availableYears = useMemo(() => {
+    const transactionYears = data.transactions.map(t => getYear(new Date(t.date)));
+    const uniqueYears = [...new Set(transactionYears), getYear(new Date())];
+    return uniqueYears.sort((a,b) => b - a);
+  }, [data.transactions]);
+
   const availableMonths = useMemo(() => {
-    const currentYear = getYear(new Date());
+    const year = parseInt(selectedYear);
     const months = [];
     for(let i=0; i < 12; i++) {
-        months.push(format(setMonth(new Date(), i), 'yyyy-MM'));
+        months.push(format(setMonth(new Date(year, 0, 1), i), 'yyyy-MM'));
     }
     return months;
-  }, []);
+  }, [selectedYear]);
+
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year);
+    // When year changes, reset month to avoid invalid date combinations
+    const newMonthDate = setYear(parse(selectedMonth, 'yyyy-MM', new Date()), parseInt(year));
+    handleMonthChange(format(newMonthDate, 'yyyy-MM'));
+  };
 
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month);
     if (month === 'all-months') {
+        const yearDate = new Date(parseInt(selectedYear), 0, 1);
         setDateRange({
             from: subDays(new Date(), 29),
             to: new Date(),
@@ -224,17 +242,29 @@ export default function ReportsPage() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="flex flex-col sm:flex-row gap-4 lg:col-span-2">
                     <DateRangePicker dateRange={dateRange} setDateRange={handleDateRangeChange} />
-                    <Select value={selectedMonth} onValueChange={handleMonthChange}>
-                        <SelectTrigger className="w-full sm:w-[180px]">
-                            <SelectValue placeholder={t('reports_filter_month_placeholder')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                             <SelectItem value="all-months">{t('reports_filter_month_all')}</SelectItem>
-                            {availableMonths.map(month => (
-                                <SelectItem key={month} value={month}>{format(parse(month, 'yyyy-MM', new Date()), 'MMMM yyyy')}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <div className="flex gap-2">
+                      <Select value={selectedYear} onValueChange={handleYearChange}>
+                          <SelectTrigger className="w-full sm:w-[120px]">
+                              <SelectValue placeholder={t('reports_filter_year_placeholder')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {availableYears.map(year => (
+                                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                      <Select value={selectedMonth} onValueChange={handleMonthChange}>
+                          <SelectTrigger className="w-full sm:w-[180px]">
+                              <SelectValue placeholder={t('reports_filter_month_placeholder')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="all-months">{t('reports_filter_month_all')}</SelectItem>
+                              {availableMonths.map(month => (
+                                  <SelectItem key={month} value={month}>{format(parse(month, 'yyyy-MM', new Date()), 'MMMM')}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                    </div>
                 </div>
                 <div className="flex gap-4 lg:col-span-2">
                   <Select value={typeFilter} onValueChange={handleTypeChange}>
