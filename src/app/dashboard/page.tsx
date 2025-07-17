@@ -8,6 +8,7 @@ import { MonthlySummaryCards } from '@/components/dashboard/monthly-summary-card
 import { Separator } from '@/components/ui/separator';
 import { IncomeExpenseChart } from '@/components/dashboard/income-expense-chart';
 import { ExpenseByCategoryChart } from '@/components/dashboard/expense-by-category-chart';
+import { SmartSearch } from '@/components/dashboard/smart-search';
 
 export default function DashboardPage() {
   const { data, loading } = useData();
@@ -43,12 +44,16 @@ export default function DashboardPage() {
       <div className="py-2">
         <Separator />
       </div>
+       <SmartSearch allTransactions={data.transactions} />
+      <div className="py-2">
+        <Separator />
+      </div>
       <MonthlySummaryCards transactions={data.transactions} />
       <div className="grid gap-6 lg:grid-cols-2">
         <IncomeExpenseChart transactions={data.transactions} />
         <ExpenseByCategoryChart transactions={data.transactions} />
       </div>
-      <RecentTransactions transactions={data.transactions.slice(0, 10)} />
+      <RecentTransactions transactions={data.transactions.slice(0, 10)} title="Recent Transactions" />
     </div>
   );
 }

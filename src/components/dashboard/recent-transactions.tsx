@@ -33,9 +33,11 @@ import { useLanguage } from '@/context/language-context';
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
+  title?: string;
+  highlightedIds?: Set<string>;
 }
 
-export function RecentTransactions({ transactions }: RecentTransactionsProps) {
+export function RecentTransactions({ transactions, title, highlightedIds }: RecentTransactionsProps) {
   const { deleteTransaction } = useData();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -75,7 +77,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   const renderMobileView = () => (
     <div className="space-y-3">
         {transactions.map(transaction => (
-            <Card key={transaction.id} className="p-4">
+            <Card key={transaction.id} className={`p-4 ${highlightedIds?.has(transaction.id) ? 'bg-primary/10 border-primary/50' : ''}`}>
                 <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-1">
                         <p className="font-medium">{transaction.description}</p>
@@ -127,7 +129,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
       </TableHeader>
       <TableBody>
         {transactions.map((transaction) => (
-          <TableRow key={transaction.id}>
+          <TableRow key={transaction.id} className={highlightedIds?.has(transaction.id) ? 'bg-primary/10' : ''}>
             <TableCell className="font-medium">{transaction.description}</TableCell>
             <TableCell className="hidden sm:table-cell">
               <Badge variant="outline">{getTranslatedCategory(transaction.category, transaction.type)}</Badge>
@@ -171,7 +173,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>{t('dashboard_recentTransactions')}</CardTitle>
+          <CardTitle>{title || t('dashboard_recentTransactions')}</CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length > 0 ? (
