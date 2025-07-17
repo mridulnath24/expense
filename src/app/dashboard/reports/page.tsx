@@ -165,15 +165,9 @@ export default function ReportsPage() {
   const generatePDF = () => {
     const doc = new jsPDF();
     
-    // Add the Hind Siliguri font to jsPDF
-    // Note: This is a large string. In a real app, you might load this from a file.
-    // For simplicity here, we'll assume a font file exists and is registered.
-    // In a real scenario, you'd add the font file and use addFileToVFS and addFont.
-    // As I cannot add files, I will set the font name and trust the browser/PDF viewer to find it
-    // if it's a common font, or add a comment for the user. For this case, we need to specify
-    // a font that supports Bangla characters.
-    doc.addFont('/fonts/HindSiliguri-Regular.ttf', 'HindSiliguri', 'normal');
-    doc.setFont('HindSiliguri');
+    // Using a built-in font to avoid crash. 
+    // This will not render Bengali characters correctly but prevents the error.
+    doc.setFont('helvetica', 'normal');
 
     const tableColumn = [t('transactionTable_col_date'), t('transactionTable_col_description'), t('transactionTable_col_category'), t('reports_col_type'), t('transactionTable_col_amount')];
     const tableRows: (string | number)[][] = [];
@@ -201,7 +195,7 @@ export default function ReportsPage() {
         head: [tableColumn],
         body: tableRows,
         startY: 50,
-        styles: { font: "HindSiliguri", fontStyle: 'normal' }
+        styles: { font: "helvetica", fontStyle: 'normal' }
     });
     
     const finalY = (doc as any).lastAutoTable.finalY;
@@ -253,7 +247,7 @@ export default function ReportsPage() {
           <Skeleton className="h-96 w-full"/>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
