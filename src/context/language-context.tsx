@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import { setCookie, parseCookies } from 'nookies';
+import { cn } from '@/lib/utils';
 
 import en from '@/locales/en.json';
 import bn from '@/locales/bn.json';
@@ -26,6 +27,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const savedLocale = cookies.locale || 'en';
     setLocaleState(savedLocale);
   }, []);
+
+  useEffect(() => {
+    // This effect will run on the client and update the body class
+    document.body.className = cn(
+      document.body.className,
+      "antialiased",
+      locale === 'bn' ? 'font-bengali' : 'font-body'
+    );
+  }, [locale]);
 
   const setLocale = (newLocale: string) => {
     setCookie(null, 'locale', newLocale, {
