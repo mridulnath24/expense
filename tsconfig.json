@@ -13,7 +13,6 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": ["@types/react-speech-recognition"],
     "plugins": [
       {
         "name": "next"
