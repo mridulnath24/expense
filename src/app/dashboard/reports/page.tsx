@@ -37,32 +37,32 @@ export default function ReportsPage() {
   
   const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
     setDateRange(newDateRange);
-    if(newDateRange?.from) {
+    if (newDateRange?.from) {
       const fromYear = getYear(newDateRange.from).toString();
       setSelectedYear(fromYear);
-      // If a full month is not selected, set month to a custom value
       if (newDateRange.to && format(newDateRange.from, 'yyyy-MM') !== format(newDateRange.to, 'yyyy-MM')) {
         setSelectedMonth('custom');
       } else {
         setSelectedMonth(format(newDateRange.from, 'yyyy-MM'));
       }
     } else {
-        setSelectedYear(getYear(new Date()).toString());
-        setSelectedMonth('all-months');
+      setSelectedYear(getYear(new Date()).toString());
+      setSelectedMonth('all-months');
     }
   };
 
   const availableYears = useMemo(() => {
-    if (data.transactions.length === 0) {
-      return [getYear(new Date())];
+    if (loading || data.transactions.length === 0) {
+      return [getYear(new Date()).toString()];
     }
     const transactionYears = data.transactions.map(t => getYear(new Date(t.date)));
     const uniqueYears = [...new Set(transactionYears)];
-    if (!uniqueYears.includes(getYear(new Date()))) {
-      uniqueYears.push(getYear(new Date()));
+    const currentYear = getYear(new Date());
+    if (!uniqueYears.includes(currentYear)) {
+      uniqueYears.push(currentYear);
     }
-    return uniqueYears.sort((a,b) => b - a);
-  }, [data.transactions]);
+    return uniqueYears.sort((a,b) => b - a).map(String);
+  }, [data.transactions, loading]);
 
   const availableMonths = useMemo(() => {
     return Array.from({ length: 12 }, (_, i) => {
@@ -77,15 +77,19 @@ export default function ReportsPage() {
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
-    // When year changes, if a specific month was selected, try to keep it.
-    // Otherwise, default to the whole year.
+    const currentMonthIndex = selectedMonth !== 'all-months' && selectedMonth !== 'custom' 
+      ? parse(selectedMonth, 'yyyy-MM', new Date()).getMonth() 
+      : new Date().getMonth();
+      
+    const newMonthValue = `${year}-${String(currentMonthIndex + 1).padStart(2, '0')}`;
+    
+    // Check if we are staying on a specific month or going to "all"
     if (selectedMonth !== 'all-months' && selectedMonth !== 'custom') {
-      const newMonth = format(parse(selectedMonth, 'yyyy-MM', new Date()), 'MM');
-      handleMonthChange(`${year}-${newMonth}`);
+       handleMonthChange(`${year}-${format(parse(selectedMonth, 'yyyy-MM', new Date()), 'MM')}`);
     } else {
-      handleMonthChange('all-months');
-      const yearDate = new Date(parseInt(year), 0, 1);
-      setDateRange({ from: startOfYear(yearDate), to: endOfYear(yearDate) });
+       handleMonthChange('all-months');
+       const yearDate = new Date(parseInt(year), 0, 1);
+       setDateRange({ from: startOfYear(yearDate), to: endOfYear(yearDate) });
     }
   };
 
@@ -95,7 +99,7 @@ export default function ReportsPage() {
       const yearDate = new Date(parseInt(selectedYear), 0, 1);
       setDateRange({ from: startOfYear(yearDate), to: endOfYear(yearDate) });
     } else if (monthValue === 'custom') {
-      // Do nothing, date range is already custom
+      // Do nothing, date range is already custom and managed by DateRangePicker
     }
     else {
       const monthDate = parse(monthValue, 'yyyy-MM', new Date());
@@ -272,7 +276,7 @@ export default function ReportsPage() {
                       </SelectTrigger>
                       <SelectContent>
                           {availableYears.map(year => (
-                              <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                              <SelectItem key={year} value={year}>{year}</SelectItem>
                           ))}
                       </SelectContent>
                   </Select>
@@ -381,3 +385,5 @@ export default function ReportsPage() {
     </div>
   );
 }
+
+    
