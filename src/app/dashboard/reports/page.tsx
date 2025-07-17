@@ -52,12 +52,12 @@ export default function ReportsPage() {
   };
 
   const availableYears = useMemo(() => {
+    const currentYear = getYear(new Date());
     if (loading || data.transactions.length === 0) {
-      return [getYear(new Date()).toString()];
+      return [String(currentYear)];
     }
     const transactionYears = data.transactions.map(t => getYear(new Date(t.date)));
     const uniqueYears = [...new Set(transactionYears)];
-    const currentYear = getYear(new Date());
     if (!uniqueYears.includes(currentYear)) {
       uniqueYears.push(currentYear);
     }
@@ -385,5 +385,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
-    
