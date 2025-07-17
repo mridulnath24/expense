@@ -89,7 +89,6 @@ export default function ReportsPage() {
       
     const newMonthValue = `${year}-${String(currentMonthIndex + 1).padStart(2, '0')}`;
     
-    // Check if we are staying on a specific month or going to "all"
     if (selectedMonth !== 'all-months' && selectedMonth !== 'custom') {
        handleMonthChange(`${year}-${format(parse(selectedMonth, 'yyyy-MM', new Date()), 'MM')}`);
     } else {
@@ -105,7 +104,6 @@ export default function ReportsPage() {
       const yearDate = new Date(parseInt(selectedYear), 0, 1);
       setDateRange({ from: startOfYear(yearDate), to: endOfYear(yearDate) });
     } else if (monthValue === 'custom') {
-      // Do nothing, date range is already custom and managed by DateRangePicker
     }
     else {
       const monthDate = parse(monthValue, 'yyyy-MM', new Date());
@@ -164,9 +162,6 @@ export default function ReportsPage() {
 
   const generatePDF = () => {
     const doc = new jsPDF();
-    
-    // Using a built-in font to avoid crash. 
-    // This will not render Bengali characters correctly but prevents the error.
     doc.setFont('helvetica', 'normal');
 
     const tableColumn = [t('transactionTable_col_date'), t('transactionTable_col_description'), t('transactionTable_col_category'), t('reports_col_type'), t('transactionTable_col_amount')];
@@ -274,15 +269,15 @@ export default function ReportsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="rounded-lg border p-4 space-y-4">
-              <p className="text-sm font-medium text-muted-foreground">{t('reports_filters')}</p>
+          <div className="rounded-lg border p-4">
+              <p className="text-sm font-medium text-muted-foreground mb-4">{t('reports_filters')}</p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="lg:col-span-2">
                     <DateRangePicker dateRange={dateRange} setDateRange={handleDateRangeChange} />
                 </div>
                 <div className="flex gap-2 lg:col-span-2">
                   <Select value={selectedYear} onValueChange={handleYearChange}>
-                      <SelectTrigger className="w-full sm:w-[120px]">
+                      <SelectTrigger className="w-full">
                           <SelectValue placeholder={t('reports_filter_year_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -292,7 +287,7 @@ export default function ReportsPage() {
                       </SelectContent>
                   </Select>
                   <Select value={selectedMonth} onValueChange={handleMonthChange}>
-                      <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectTrigger className="w-full">
                           <SelectValue placeholder={t('reports_filter_month_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -308,7 +303,7 @@ export default function ReportsPage() {
                 </div>
                 <div className="flex gap-4 lg:col-span-2">
                   <Select value={typeFilter} onValueChange={handleTypeChange}>
-                      <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectTrigger className="w-full">
                           <SelectValue placeholder={t('reports_filter_type_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -318,7 +313,7 @@ export default function ReportsPage() {
                       </SelectContent>
                   </Select>
                   <Select value={categoryFilter} onValueChange={setCategoryFilter} disabled={typeFilter === 'all' && categoryFilter === 'all'}>
-                      <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectTrigger className="w-full">
                           <SelectValue placeholder={t('reports_filter_category_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
