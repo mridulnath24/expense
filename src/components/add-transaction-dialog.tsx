@@ -1,9 +1,11 @@
 'use client';
 
+import 'regenerator-runtime/runtime';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import {
   Dialog,
   DialogContent,
@@ -27,13 +29,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2, Sparkles } from 'lucide-react';
+import { CalendarIcon, Loader2, Sparkles, Mic, MicOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { useData } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
 import { type Transaction } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
 import { suggestExpenseCategory } from '@/ai/flows/suggest-expense-category';
+import { parseTransactionFromText } from '@/ai/flows/parse-transaction-from-text';
 
 const formSchema = z.object({
   type: z.enum(['income', 'expense']),
@@ -55,9 +58,17 @@ interface AddTransactionDialogProps {
 export function AddTransactionDialog({ open, onOpenChange, children, transaction }: AddTransactionDialogProps) {
   const { data, addTransaction, updateTransaction } = useData();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const isEditMode = !!transaction;
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -86,6 +97,59 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
       });
     }
   }, [transaction, form, open]);
+
+  // Effect to parse transcript when user stops speaking
+  useEffect(() => {
+    if (!listening && transcript) {
+      handleParseTranscript();
+    }
+  }, [listening, transcript]);
+  
+  const handleVoiceListen = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+    } else {
+      resetTranscript();
+      SpeechRecognition.startListening({ continuous: false, language: locale });
+    }
+  };
+
+  const handleParseTranscript = async () => {
+    if (!transcript) return;
+    setIsParsing(true);
+    try {
+      const result = await parseTransactionFromText({ text: transcript, locale });
+      if (result) {
+        form.setValue('type', result.type);
+        form.setValue('amount', result.amount);
+        form.setValue('description', result.description);
+        
+        // Auto-suggest category after parsing
+        const suggestResult = await suggestExpenseCategory({
+          description: result.description,
+          categories: data.categories[result.type],
+        });
+        if (suggestResult.category && data.categories[result.type].includes(suggestResult.category)) {
+          form.setValue('category', suggestResult.category);
+        }
+
+        toast({
+          title: t('toast_voiceParsed_title'),
+          description: t('toast_voiceParsed_desc'),
+        });
+      }
+    } catch (error) {
+       console.error("Failed to parse transcript:", error);
+       toast({
+          title: t('toast_voiceParse_fail_title'),
+          description: t('toast_voiceParse_fail_desc'),
+          variant: 'destructive'
+       });
+    } finally {
+        setIsParsing(false);
+        resetTranscript();
+    }
+  };
 
 
   const transactionType = form.watch('type');
@@ -160,6 +224,8 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
       onOpenChange(isOpen);
       if (!isOpen) {
         form.reset();
+        resetTranscript();
+        SpeechRecognition.abortListening();
       }
     }}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
@@ -167,7 +233,7 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
         <DialogHeader>
           <DialogTitle>{isEditMode ? t('addTransaction_title_edit') : t('addTransaction_title_add')}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? t('addTransaction_desc_edit') : t('addTransaction_desc_add')}
+            {isEditMode ? t('addTransaction_desc_edit') : listening ? t('addTransaction_desc_listening') : t('addTransaction_desc_add')}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -295,8 +361,14 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
                 </FormItem>
               )}
             />
-            <DialogFooter>
-              <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
+            <DialogFooter className="sm:justify-between gap-2">
+                {browserSupportsSpeechRecognition && (
+                    <Button type="button" variant="outline" size="icon" onClick={handleVoiceListen} className={cn(listening && "bg-destructive text-destructive-foreground hover:bg-destructive/90")}>
+                        {listening ? <MicOff className="h-4 w-4" /> : isParsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+                        <span className="sr-only">{listening ? "Stop listening" : "Start listening"}</span>
+                    </Button>
+                )}
+              <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting || isParsing}>
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 {isEditMode ? t('addTransaction_button_edit') : t('addTransaction_button_add')}
               </Button>
