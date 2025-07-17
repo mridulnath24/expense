@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { DateRange } from 'react-day-picker';
-import { subDays, format, startOfMonth, endOfMonth, parse, getYear, setMonth, setYear } from 'date-fns';
+import { subDays, format, startOfMonth, endOfMonth, parse, getYear, setMonth, setYear, startOfYear, endOfYear } from 'date-fns';
 import { useData } from '@/hooks/use-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { SpendingChart } from '@/components/reports/spending-chart';
@@ -38,10 +38,17 @@ export default function ReportsPage() {
   const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
     setDateRange(newDateRange);
     if(newDateRange?.from) {
-        setSelectedYear(getYear(newDateRange.from).toString());
+      const fromYear = getYear(newDateRange.from).toString();
+      setSelectedYear(fromYear);
+      // If a full month is not selected, set month to a custom value
+      if (newDateRange.to && format(newDateRange.from, 'yyyy-MM') !== format(newDateRange.to, 'yyyy-MM')) {
+        setSelectedMonth('custom');
+      } else {
         setSelectedMonth(format(newDateRange.from, 'yyyy-MM'));
+      }
     } else {
-        setSelectedMonth('all-months'); 
+        setSelectedYear(getYear(new Date()).toString());
+        setSelectedMonth('all-months');
     }
   };
 
@@ -52,36 +59,45 @@ export default function ReportsPage() {
   }, [data.transactions]);
 
   const availableMonths = useMemo(() => {
-    const year = parseInt(selectedYear);
-    const months = [];
-    for(let i=0; i < 12; i++) {
-        months.push(format(setMonth(new Date(year, 0, 1), i), 'yyyy-MM'));
-    }
-    return months;
+    return Array.from({ length: 12 }, (_, i) => {
+      const year = parseInt(selectedYear);
+      const monthDate = setMonth(new Date(year, 0, 1), i);
+      return {
+        value: format(monthDate, 'yyyy-MM'),
+        label: format(monthDate, 'MMMM'),
+      };
+    });
   }, [selectedYear]);
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
-    // When year changes, reset month to avoid invalid date combinations
-    const newMonthDate = setYear(parse(selectedMonth, 'yyyy-MM', new Date()), parseInt(year));
-    handleMonthChange(format(newMonthDate, 'yyyy-MM'));
+    // When year changes, if a specific month was selected, try to keep it.
+    // Otherwise, default to the whole year.
+    if (selectedMonth !== 'all-months' && selectedMonth !== 'custom') {
+      const newMonth = format(parse(selectedMonth, 'yyyy-MM', new Date()), 'MM');
+      handleMonthChange(`${year}-${newMonth}`);
+    } else {
+      handleMonthChange('all-months');
+      const yearDate = new Date(parseInt(year), 0, 1);
+      setDateRange({ from: startOfYear(yearDate), to: endOfYear(yearDate) });
+    }
   };
 
-  const handleMonthChange = (month: string) => {
-    setSelectedMonth(month);
-    if (month === 'all-months') {
-        const yearDate = new Date(parseInt(selectedYear), 0, 1);
-        setDateRange({
-            from: subDays(new Date(), 29),
-            to: new Date(),
-        });
-        return;
+  const handleMonthChange = (monthValue: string) => {
+    setSelectedMonth(monthValue);
+    if (monthValue === 'all-months') {
+      const yearDate = new Date(parseInt(selectedYear), 0, 1);
+      setDateRange({ from: startOfYear(yearDate), to: endOfYear(yearDate) });
+    } else if (monthValue === 'custom') {
+      // Do nothing, date range is already custom
     }
-    const monthDate = parse(month, 'yyyy-MM', new Date());
-    setDateRange({
-      from: startOfMonth(monthDate),
-      to: endOfMonth(monthDate),
-    });
+    else {
+      const monthDate = parse(monthValue, 'yyyy-MM', new Date());
+      setDateRange({
+        from: startOfMonth(monthDate),
+        to: endOfMonth(monthDate),
+      });
+    }
   };
 
   const { filteredTransactions, totalIncome, totalExpense } = useMemo(() => {
@@ -240,31 +256,34 @@ export default function ReportsPage() {
           <div className="rounded-lg border p-4 space-y-4">
               <p className="text-sm font-medium text-muted-foreground">{t('reports_filters')}</p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="flex flex-col sm:flex-row gap-4 lg:col-span-2">
+                <div className="lg:col-span-2">
                     <DateRangePicker dateRange={dateRange} setDateRange={handleDateRangeChange} />
-                    <div className="flex gap-2">
-                      <Select value={selectedYear} onValueChange={handleYearChange}>
-                          <SelectTrigger className="w-full sm:w-[120px]">
-                              <SelectValue placeholder={t('reports_filter_year_placeholder')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                              {availableYears.map(year => (
-                                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                      <Select value={selectedMonth} onValueChange={handleMonthChange}>
-                          <SelectTrigger className="w-full sm:w-[180px]">
-                              <SelectValue placeholder={t('reports_filter_month_placeholder')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="all-months">{t('reports_filter_month_all')}</SelectItem>
-                              {availableMonths.map(month => (
-                                  <SelectItem key={month} value={month}>{format(parse(month, 'yyyy-MM', new Date()), 'MMMM')}</SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                    </div>
+                </div>
+                <div className="flex gap-2 lg:col-span-2">
+                  <Select value={selectedYear} onValueChange={handleYearChange}>
+                      <SelectTrigger className="w-full sm:w-[120px]">
+                          <SelectValue placeholder={t('reports_filter_year_placeholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                          {availableYears.map(year => (
+                              <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                  <Select value={selectedMonth} onValueChange={handleMonthChange}>
+                      <SelectTrigger className="w-full sm:w-[180px]">
+                          <SelectValue placeholder={t('reports_filter_month_placeholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="all-months">{t('reports_filter_month_all')}</SelectItem>
+                          {availableMonths.map(month => (
+                              <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                          ))}
+                           {selectedMonth === 'custom' && (
+                            <SelectItem value="custom" disabled>Custom Range</SelectItem>
+                          )}
+                      </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex gap-4 lg:col-span-2">
                   <Select value={typeFilter} onValueChange={handleTypeChange}>
