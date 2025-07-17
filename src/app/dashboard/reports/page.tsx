@@ -53,15 +53,21 @@ export default function ReportsPage() {
 
   const availableYears = useMemo(() => {
     const currentYear = getYear(new Date());
-    if (loading || data.transactions.length === 0) {
-      return [String(currentYear)];
+    const endYear = 2030;
+    let startYear = currentYear;
+    
+    if (!loading && data.transactions.length > 0) {
+      const transactionYears = data.transactions.map(t => getYear(new Date(t.date)));
+      const minTransactionYear = Math.min(...transactionYears);
+      startYear = Math.min(minTransactionYear, currentYear);
     }
-    const transactionYears = data.transactions.map(t => getYear(new Date(t.date)));
-    const uniqueYears = [...new Set(transactionYears)];
-    if (!uniqueYears.includes(currentYear)) {
-      uniqueYears.push(currentYear);
+    
+    const years = [];
+    for (let year = endYear; year >= startYear; year--) {
+        years.push(String(year));
     }
-    return uniqueYears.sort((a,b) => b - a).map(String);
+    
+    return years;
   }, [data.transactions, loading]);
 
   const availableMonths = useMemo(() => {
