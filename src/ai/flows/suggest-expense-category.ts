@@ -10,9 +10,24 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { AppData } from '@/lib/types';
-import en from '@/locales/en.json';
 
-const allExpenseCategories = en.categories.expense;
+const allExpenseCategories = [
+  "Food",
+  "Transport",
+  "Utilities",
+  "House Rent",
+  "Entertainment",
+  "Health",
+  "Shopping",
+  "Other",
+  "Grocery",
+  "DPS",
+  "EMI",
+  "Medical",
+  "Electricity Bill",
+  "Gas Bill",
+  "Wifi Bill"
+];
 
 export const SuggestExpenseCategoryInputSchema = z.object({
   description: z.string().describe('The description of the expense transaction.'),
