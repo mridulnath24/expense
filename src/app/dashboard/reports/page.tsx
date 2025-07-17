@@ -271,59 +271,57 @@ export default function ReportsPage() {
         <CardContent className="space-y-6">
           <div className="rounded-lg border p-4">
               <p className="text-sm font-medium text-muted-foreground mb-4">{t('reports_filters')}</p>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="lg:col-span-2">
-                    <DateRangePicker dateRange={dateRange} setDateRange={handleDateRangeChange} />
-                </div>
-                <div className="flex gap-2 lg:col-span-2">
-                  <Select value={selectedYear} onValueChange={handleYearChange}>
-                      <SelectTrigger className="w-full">
-                          <SelectValue placeholder={t('reports_filter_year_placeholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                          {availableYears.map(year => (
-                              <SelectItem key={year} value={year}>{year}</SelectItem>
-                          ))}
-                      </SelectContent>
-                  </Select>
-                  <Select value={selectedMonth} onValueChange={handleMonthChange}>
-                      <SelectTrigger className="w-full">
-                          <SelectValue placeholder={t('reports_filter_month_placeholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="all-months">{t('reports_filter_month_all')}</SelectItem>
-                          {availableMonths.map(month => (
-                              <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
-                          ))}
-                           {selectedMonth === 'custom' && (
-                            <SelectItem value="custom" disabled>Custom Range</SelectItem>
-                          )}
-                      </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-4 lg:col-span-2">
-                  <Select value={typeFilter} onValueChange={handleTypeChange}>
-                      <SelectTrigger className="w-full">
-                          <SelectValue placeholder={t('reports_filter_type_placeholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="all">{t('reports_filter_type_all')}</SelectItem>
-                          <SelectItem value="income">{t('addTransaction_type_income')}</SelectItem>
-                          <SelectItem value="expense">{t('addTransaction_type_expense')}</SelectItem>
-                      </SelectContent>
-                  </Select>
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter} disabled={typeFilter === 'all' && categoryFilter === 'all'}>
-                      <SelectTrigger className="w-full">
-                          <SelectValue placeholder={t('reports_filter_category_placeholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="all">{t('reports_filter_category_all')}</SelectItem>
-                          {availableCategories.slice(1).map(cat => (
-                              <SelectItem key={cat} value={cat}>{getTranslatedCategory(cat)}</SelectItem>
-                          ))}
-                      </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex flex-wrap items-center gap-4">
+                  <DateRangePicker dateRange={dateRange} setDateRange={handleDateRangeChange} />
+                  <div className="flex-grow sm:flex-grow-0 flex items-center gap-2">
+                    <Select value={selectedYear} onValueChange={handleYearChange}>
+                        <SelectTrigger className="w-full sm:w-auto">
+                            <SelectValue placeholder={t('reports_filter_year_placeholder')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableYears.map(year => (
+                                <SelectItem key={year} value={year}>{year}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Select value={selectedMonth} onValueChange={handleMonthChange}>
+                        <SelectTrigger className="w-full sm:w-auto">
+                            <SelectValue placeholder={t('reports_filter_month_placeholder')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all-months">{t('reports_filter_month_all')}</SelectItem>
+                            {availableMonths.map(month => (
+                                <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                            ))}
+                            {selectedMonth === 'custom' && (
+                              <SelectItem value="custom" disabled>Custom Range</SelectItem>
+                            )}
+                        </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-grow sm:flex-grow-0 flex items-center gap-2">
+                    <Select value={typeFilter} onValueChange={handleTypeChange}>
+                        <SelectTrigger className="w-full sm:w-auto">
+                            <SelectValue placeholder={t('reports_filter_type_placeholder')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('reports_filter_type_all')}</SelectItem>
+                            <SelectItem value="income">{t('addTransaction_type_income')}</SelectItem>
+                            <SelectItem value="expense">{t('addTransaction_type_expense')}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter} disabled={typeFilter === 'all' && categoryFilter === 'all'}>
+                        <SelectTrigger className="w-full sm:w-auto">
+                            <SelectValue placeholder={t('reports_filter_category_placeholder')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('reports_filter_category_all')}</SelectItem>
+                            {availableCategories.slice(1).map(cat => (
+                                <SelectItem key={cat} value={cat}>{getTranslatedCategory(cat)}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                  </div>
               </div>
           </div>
           
