@@ -80,9 +80,9 @@ export function ReportsDataTable({ transactions }: ReportsDataTableProps) {
                 <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-1">
                         <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm">
+                        <div className="text-sm">
                             <Badge variant="outline">{getTranslatedCategory(transaction.category, transaction.type)}</Badge>
-                        </p>
+                        </div>
                          <p className="text-sm text-muted-foreground">{format(new Date(transaction.date), 'PP')}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
