@@ -28,6 +28,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
+import { getBaseCategories } from '@/hooks/use-data';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -36,31 +37,10 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-const defaultCategories = {
-  income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
-  expense: [
-    'Food',
-    'Transport',
-    'Utilities',
-    'House Rent',
-    'Entertainment',
-    'Health',
-    'Shopping',
-    'Other',
-    'Grocery',
-    'DPS',
-    'EMI',
-    'Medical',
-    'Electricity Bill',
-    'Gas Bill',
-    'Wifi Bill',
-  ],
-};
-
 export default function SettingsPage() {
   const { data, loading, addCategory, updateCategory, deleteCategory, exportData, resetData } = useData();
   const { user, username, loading: authLoading, updateUserProfile } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { toast } = useToast();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -68,6 +48,8 @@ export default function SettingsPage() {
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [addCategoryType, setAddCategoryType] = useState<'income' | 'expense'>('expense');
+  
+  const defaultCategories = getBaseCategories(locale);
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -180,7 +162,7 @@ export default function SettingsPage() {
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" disabled={category.name === 'Other'}>
+                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">{t('settings_delete')}</span>
                       </Button>
@@ -393,5 +375,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    

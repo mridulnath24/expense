@@ -8,8 +8,9 @@ import { type AppData, type Transaction } from '@/lib/types';
 import en from '@/locales/en.json';
 import bn from '@/locales/bn.json';
 
-const getBaseCategories = (locale: string): AppData['categories'] => {
-  const t = locale === 'bn' ? bn : en;
+export const getBaseCategories = (locale: string): AppData['categories'] => {
+  // This function is exported to be used in the settings page for checking default categories.
+  // Note: The category names here are the keys, not the translated values.
   return {
     income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
     expense: [
@@ -52,7 +53,6 @@ export function useData() {
       unsubscribe = onSnapshot(userDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const fetchedData = docSnap.data() as AppData;
-           // Merge default categories with stored categories to ensure new categories are added
           const baseCategories = getBaseCategories('en'); // Always merge with english base
           const mergedCategories = {
             income: [...new Set([...baseCategories.income, ...(fetchedData.categories?.income || [])])],
@@ -62,24 +62,20 @@ export function useData() {
           const updatedData = { ...fetchedData, categories: mergedCategories, transactions: sortedTransactions };
           setData(updatedData);
         } else {
-          // This case is handled by AuthProvider, which creates the document.
-          // We can set default data here as a fallback while the document is being created.
           setData(defaultData);
         }
         setLoading(false);
       }, (error) => {
          console.error("Firestore snapshot error:", error);
-         setData(defaultData); // Fallback to default data on error
+         setData(defaultData);
          setLoading(false);
       });
 
     } else if (!user) {
-      // Not logged in, reset to default data and stop loading
       setData(defaultData);
       setLoading(false);
     }
     
-    // Cleanup subscription on unmount
     return () => {
       if (unsubscribe) {
         unsubscribe();
@@ -94,7 +90,6 @@ export function useData() {
         const dataToSave = { ...newData, transactions: sortedTransactions };
         const userDocRef = doc(db, 'users', user.uid);
         await setDoc(userDocRef, dataToSave, { merge: true });
-        // No need to call setData here as onSnapshot will handle it
       } catch (error) {
         console.error("Failed to save data to Firestore", error);
       }
@@ -167,45 +162,45 @@ export function useData() {
 
   const deleteCategory = useCallback(async (type: 'income' | 'expense', name: string) => {
     if (!user || !db) {
-      console.error("User not logged in or DB not available");
-      return;
+        console.error("User not logged in or DB not available");
+        return;
     }
 
     const userDocRef = doc(db, 'users', user.uid);
     try {
-      const docSnap = await getDoc(userDocRef);
-      if (!docSnap.exists()) {
-        console.error("User document does not exist.");
-        return;
-      }
-      
-      const currentData = docSnap.data() as AppData;
-      
-      // Create a deep copy to avoid mutation issues
-      const newData = JSON.parse(JSON.stringify(currentData));
-
-      // Re-assign transactions from the deleted category to 'Other'
-      if (type === 'expense' && name !== 'Other') {
-        let otherExists = newData.categories.expense.includes('Other');
-        if (!otherExists) {
-            newData.categories.expense.push('Other');
+        const docSnap = await getDoc(userDocRef);
+        if (!docSnap.exists()) {
+            console.error("User document does not exist.");
+            return;
         }
-        newData.transactions = newData.transactions.map((t: Transaction) => {
-          if (t.type === 'expense' && t.category === name) {
-            return { ...t, category: 'Other' };
-          }
-          return t;
-        });
-      }
 
-      // Filter out the category to be deleted
-      newData.categories[type] = newData.categories[type].filter((c: string) => c !== name);
+        const currentData = docSnap.data() as AppData;
+        
+        let transactions = currentData.transactions || [];
+        let categories = currentData.categories || { income: [], expense: [] };
 
-      // Save the entire updated data object back to Firestore
-      await setDoc(userDocRef, newData);
+        if (type === 'expense' && name !== 'Other') {
+            transactions = transactions.map((t: Transaction) => {
+                if (t.type === 'expense' && t.category === name) {
+                    return { ...t, category: 'Other' };
+                }
+                return t;
+            });
+            // Ensure 'Other' exists
+            if (!categories.expense.includes('Other')) {
+                categories.expense.push('Other');
+            }
+        }
+        
+        categories[type] = categories[type].filter((c: string) => c !== name);
+
+        await setDoc(userDocRef, {
+            transactions: transactions,
+            categories: categories,
+        }, { merge: true });
 
     } catch (error) {
-      console.error("Failed to delete category in Firestore:", error);
+        console.error("Failed to delete category in Firestore:", error);
     }
   }, [user, db]);
 
@@ -228,5 +223,3 @@ export function useData() {
 
   return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory, updateCategory, deleteCategory, exportData, resetData };
 }
-
-    
