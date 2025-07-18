@@ -170,30 +170,39 @@ export function useData() {
 
   }, [data, saveData]);
 
-  const deleteCategory = useCallback((type: 'income' | 'expense', name: string) => {
-    if (name === 'Other') return;
+  const deleteCategory = useCallback(async (type: 'income' | 'expense', name: string) => {
+    if (!user || !db) return;
 
-    // Create a new data object to modify
+    // Create a deep copy to avoid direct state mutation
     const newData = JSON.parse(JSON.stringify(data)) as AppData;
 
-    // Ensure 'Other' category exists
-    if (!newData.categories[type].includes('Other')) {
-        newData.categories[type].push('Other');
+    // Ensure 'Other' category exists, if not, add it.
+    if (!newData.categories.expense.includes('Other')) {
+        newData.categories.expense.push('Other');
     }
 
-    // Re-assign transactions from the deleted category to 'Other'
-    newData.transactions = newData.transactions.map(t => {
-        if (t.type === type && t.category === name) {
-            return { ...t, category: 'Other' };
-        }
-        return t;
-    });
+    // Re-assign transactions from the deleted category to 'Other' (only for expenses)
+    if (type === 'expense' && name !== 'Other') {
+        newData.transactions = newData.transactions.map(t => {
+            if (t.type === 'expense' && t.category === name) {
+                return { ...t, category: 'Other' };
+            }
+            return t;
+        });
+    }
     
     // Filter out the category to be deleted
     newData.categories[type] = newData.categories[type].filter(c => c !== name);
 
-    saveData(newData);
-  }, [data, saveData]);
+    // Directly save the entire updated data object to Firestore
+    try {
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, newData, { merge: true });
+    } catch (error) {
+        console.error("Failed to delete category in Firestore", error);
+    }
+  }, [data, user, db]);
+
 
   const exportData = useCallback(() => {
     if (!data) return;
