@@ -173,28 +173,26 @@ export function useData() {
   const deleteCategory = useCallback((type: 'income' | 'expense', name: string) => {
     if (name === 'Other') return;
 
-    const updatedData = { ...data };
-    
-    // Ensure 'Other' category exists, if not, add it
-    if (!updatedData.categories[type].includes('Other')) {
-        updatedData.categories[type].push('Other');
+    // Create a new data object to modify
+    const newData = JSON.parse(JSON.stringify(data)) as AppData;
+
+    // Ensure 'Other' category exists
+    if (!newData.categories[type].includes('Other')) {
+        newData.categories[type].push('Other');
     }
 
-    // Filter out the category to be deleted
-    updatedData.categories = {
-        ...updatedData.categories,
-        [type]: updatedData.categories[type].filter(c => c !== name),
-    };
-    
     // Re-assign transactions from the deleted category to 'Other'
-    updatedData.transactions = updatedData.transactions.map(t => {
+    newData.transactions = newData.transactions.map(t => {
         if (t.type === type && t.category === name) {
             return { ...t, category: 'Other' };
         }
         return t;
     });
+    
+    // Filter out the category to be deleted
+    newData.categories[type] = newData.categories[type].filter(c => c !== name);
 
-    saveData(updatedData);
+    saveData(newData);
   }, [data, saveData]);
 
   const exportData = useCallback(() => {
