@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -15,7 +16,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, LineChart, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, LineChart, PlusCircle, Settings } from 'lucide-react';
 import Logo from './logo';
 import { UserNav } from './user-nav';
 import { AddTransactionDialog } from './add-transaction-dialog';
@@ -62,6 +63,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith('/dashboard/settings')}
+                tooltip={t('sidebar_settings')}
+              >
+                <Link href="/dashboard/settings">
+                  <Settings />
+                  <span>{t('sidebar_settings')}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
@@ -70,7 +83,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
              <SidebarTrigger className="md:hidden" />
              <h1 className="text-xl font-semibold">
-              {pathname.includes('reports') ? t('header_reports') : t('header_dashboard')}
+              {pathname.includes('reports') ? t('header_reports') : pathname.includes('settings') ? t('header_settings') : t('header_dashboard')}
              </h1>
           </div>
 

@@ -31,8 +31,10 @@
     "userNav_logout": "লগ আউট",
     "sidebar_dashboard": "ড্যাশবোর্ড",
     "sidebar_reports": "রিপোর্ট",
+    "sidebar_settings": "সেটিংস",
     "header_dashboard": "ড্যাশবোর্ড",
     "header_reports": "রিপোর্ট",
+    "header_settings": "সেটিংস",
     "newTransaction_button": "নতুন লেনদেন",
     "dashboard_totalIncome": "মোট আয়",
     "dashboard_totalIncome_desc": "সমস্ত লেনদেন থেকে",
@@ -130,6 +132,16 @@
     "addCategory_desc": "নতুন {{type}} বিভাগের জন্য একটি নাম লিখুন।",
     "addCategory_placeholder": "বিভাগের নাম",
     "addCategory_button": "বিভাগ যোগ করুন",
+    "settings_title": "বিভাগ পরিচালনা করুন",
+    "settings_desc": "এখানে আপনি আপনার নিজস্ব আয় এবং ব্যয় বিভাগ যোগ, সম্পাদনা বা মুছে ফেলতে পারেন।",
+    "settings_incomeCategories": "আয় বিভাগসমূহ",
+    "settings_expenseCategories": "ব্যয় বিভাগসমূহ",
+    "settings_addCategory_button": "বিভাগ যোগ করুন",
+    "settings_edit": "সম্পাদনা",
+    "settings_delete": "মুছে ফেলুন",
+    "settings_editCategory_title": "বিভাগের নাম সম্পাদনা করুন",
+    "settings_delete_desc": "আপনি কি নিশ্চিত যে '{{category}}' বিভাগটি মুছে ফেলতে চান? এই বিভাগের অধীনে সমস্ত লেনদেন 'অন্যান্য' বিভাগে স্থানান্তরিত হবে।",
+    "settings_deleteDefault_error": "ডিফল্ট বিভাগ মুছে ফেলা যাবে না।",
     "categories_income_salary": "বেতন",
     "categories_income_bonus": "বোনাস",
     "categories_income_gifts": "উপহার",
@@ -150,5 +162,3 @@
     "categories_expense_gasBill": "গ্যাস বিল",
     "categories_expense_wifiBill": "ওয়াইফাই বিল"
 }
-
-    

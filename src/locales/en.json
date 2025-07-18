@@ -31,8 +31,10 @@
     "userNav_logout": "Log out",
     "sidebar_dashboard": "Dashboard",
     "sidebar_reports": "Reports",
+    "sidebar_settings": "Settings",
     "header_dashboard": "Dashboard",
     "header_reports": "Reports",
+    "header_settings": "Settings",
     "newTransaction_button": "New Transaction",
     "dashboard_totalIncome": "Total Income",
     "dashboard_totalIncome_desc": "from all transactions",
@@ -130,6 +132,16 @@
     "addCategory_desc": "Enter a name for the new {{type}} category.",
     "addCategory_placeholder": "Category Name",
     "addCategory_button": "Add Category",
+    "settings_title": "Manage Categories",
+    "settings_desc": "Here you can add, edit, or delete your custom income and expense categories.",
+    "settings_incomeCategories": "Income Categories",
+    "settings_expenseCategories": "Expense Categories",
+    "settings_addCategory_button": "Add Category",
+    "settings_edit": "Edit",
+    "settings_delete": "Delete",
+    "settings_editCategory_title": "Edit Category Name",
+    "settings_delete_desc": "Are you sure you want to delete the '{{category}}' category? All transactions under this category will be moved to 'Other'.",
+    "settings_deleteDefault_error": "Default categories cannot be deleted.",
     "categories_income_salary": "Salary",
     "categories_income_bonus": "Bonus",
     "categories_income_gifts": "Gifts",
@@ -150,5 +162,3 @@
     "categories_expense_gasBill": "Gas Bill",
     "categories_expense_wifiBill": "Wifi Bill"
 }
-
-    

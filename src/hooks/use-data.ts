@@ -147,8 +147,48 @@ export function useData() {
     saveData(updatedData);
   }, [data, saveData]);
 
-
-  return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory };
-}
-
+  const updateCategory = useCallback((type: 'income' | 'expense', oldName: string, newName: string) => {
+    if (oldName === newName || !oldName || !newName) return;
     
+    const updatedCategories = { ...data.categories };
+    const categoryIndex = updatedCategories[type].indexOf(oldName);
+    if (categoryIndex === -1) return;
+
+    updatedCategories[type][categoryIndex] = newName;
+
+    const updatedTransactions = data.transactions.map(t => {
+      if (t.type === type && t.category === oldName) {
+        return { ...t, category: newName };
+      }
+      return t;
+    });
+
+    saveData({
+      categories: updatedCategories,
+      transactions: updatedTransactions
+    });
+
+  }, [data, saveData]);
+
+  const deleteCategory = useCallback((type: 'income' | 'expense', name: string) => {
+    const updatedCategories = {
+        ...data.categories,
+        [type]: data.categories[type].filter(c => c !== name),
+    };
+    
+    const updatedTransactions = data.transactions.map(t => {
+        if (t.type === type && t.category === name) {
+            return { ...t, category: 'Other' };
+        }
+        return t;
+    });
+
+    saveData({
+        categories: updatedCategories,
+        transactions: updatedTransactions,
+    });
+  }, [data, saveData]);
+
+
+  return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory, updateCategory, deleteCategory };
+}
