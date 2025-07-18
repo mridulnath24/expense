@@ -6,7 +6,7 @@ import { useData } from '@/hooks/use-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Pencil, Trash2, Plus, Download, RefreshCw, User, Database } from 'lucide-react';
+import { Pencil, Trash2, Plus, Download, RefreshCw, User, Database, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -151,7 +151,7 @@ export default function SettingsPage() {
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" disabled={category.name === 'Other'}>
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">{t('settings_delete')}</span>
                       </Button>
