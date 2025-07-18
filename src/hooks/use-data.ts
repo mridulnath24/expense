@@ -171,13 +171,22 @@ export function useData() {
   }, [data, saveData]);
 
   const deleteCategory = useCallback((type: 'income' | 'expense', name: string) => {
+    if (name === 'Other') return;
+
     const updatedData = { ...data };
     
+    // Ensure 'Other' category exists, if not, add it
+    if (!updatedData.categories[type].includes('Other')) {
+        updatedData.categories[type].push('Other');
+    }
+
+    // Filter out the category to be deleted
     updatedData.categories = {
         ...updatedData.categories,
         [type]: updatedData.categories[type].filter(c => c !== name),
     };
     
+    // Re-assign transactions from the deleted category to 'Other'
     updatedData.transactions = updatedData.transactions.map(t => {
         if (t.type === type && t.category === name) {
             return { ...t, category: 'Other' };
