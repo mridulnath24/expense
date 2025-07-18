@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
@@ -56,6 +57,7 @@ interface AuthContextType {
   signInWithFacebook: () => Promise<any>;
   logout: () => void;
   sendPasswordReset: (email: string) => Promise<void>;
+  updateUserProfile: (firstName: string, lastName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -181,6 +183,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return sendPasswordResetEmail(authInstance, email);
   }
 
+  const updateUserProfile = async (firstName: string, lastName: string) => {
+    if (!authInstance || !authInstance.currentUser) throw new Error("User not logged in");
+    const displayName = `${firstName} ${lastName}`.trim();
+    await updateProfile(authInstance.currentUser, { displayName });
+    setUsername(displayName);
+    setUser({ ...authInstance.currentUser });
+  };
+
+
   if (loading) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -203,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, username, loading, db: dbInstance, signIn, signUp, signInWithGoogle, signInWithFacebook, logout, sendPasswordReset }}>
+    <AuthContext.Provider value={{ user, username, loading, db: dbInstance, signIn, signUp, signInWithGoogle, signInWithFacebook, logout, sendPasswordReset, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -189,6 +189,21 @@ export function useData() {
     });
   }, [data, saveData]);
 
+  const exportData = useCallback(() => {
+    if (!data) return;
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(data, null, 2)
+    )}`;
+    const link = document.createElement("a");
+    link.href = jsonString;
+    link.download = `expense-tracker-data-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+  }, [data]);
 
-  return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory, updateCategory, deleteCategory };
+  const resetData = useCallback(() => {
+    saveData(defaultData);
+  }, [saveData]);
+
+
+  return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory, updateCategory, deleteCategory, exportData, resetData };
 }
