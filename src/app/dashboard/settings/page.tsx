@@ -36,6 +36,27 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+const defaultCategories = {
+  income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
+  expense: [
+    'Food',
+    'Transport',
+    'Utilities',
+    'House Rent',
+    'Entertainment',
+    'Health',
+    'Shopping',
+    'Other',
+    'Grocery',
+    'DPS',
+    'EMI',
+    'Medical',
+    'Electricity Bill',
+    'Gas Bill',
+    'Wifi Bill',
+  ],
+};
+
 export default function SettingsPage() {
   const { data, loading, addCategory, updateCategory, deleteCategory, exportData, resetData } = useData();
   const { user, username, loading: authLoading, updateUserProfile } = useAuth();
@@ -99,6 +120,14 @@ export default function SettingsPage() {
   };
   
   const handleDeleteCategory = (category: Category) => {
+    const isDefault = defaultCategories[category.type].includes(category.name);
+    if(isDefault) {
+        toast({
+            title: t('settings_deleteDefault_error'),
+            variant: 'destructive'
+        });
+        return;
+    }
     deleteCategory(category.type, category.name);
   };
 
@@ -364,3 +393,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    

@@ -11,31 +11,26 @@ import bn from '@/locales/bn.json';
 const getBaseCategories = (locale: string): AppData['categories'] => {
   const t = locale === 'bn' ? bn : en;
   return {
-    income: [
-      "Salary",
-      "Bonus",
-      "Gifts",
-      "Freelance"
-    ],
+    income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
     expense: [
-      "Food",
-      "Transport",
-      "Utilities",
-      "House Rent",
-      "Entertainment",
-      "Health",
-      "Shopping",
-      "Other",
-      "Grocery",
-      "DPS",
-      "EMI",
-      "Medical",
-      "Electricity Bill",
-      "Gas Bill",
-      "Wifi Bill"
+      'Food',
+      'Transport',
+      'Utilities',
+      'House Rent',
+      'Entertainment',
+      'Health',
+      'Shopping',
+      'Other',
+      'Grocery',
+      'DPS',
+      'EMI',
+      'Medical',
+      'Electricity Bill',
+      'Gas Bill',
+      'Wifi Bill',
     ],
-  }
-}
+  };
+};
 
 const defaultData: AppData = {
   transactions: [],
@@ -171,37 +166,48 @@ export function useData() {
   }, [data, saveData]);
 
   const deleteCategory = useCallback(async (type: 'income' | 'expense', name: string) => {
-    if (!user || !db) return;
-
-    // Create a deep copy to avoid direct state mutation
-    const newData = JSON.parse(JSON.stringify(data)) as AppData;
-
-    // Ensure 'Other' category exists, if not, add it.
-    if (!newData.categories.expense.includes('Other')) {
-        newData.categories.expense.push('Other');
+    if (!user || !db) {
+      console.error("User not logged in or DB not available");
+      return;
     }
 
-    // Re-assign transactions from the deleted category to 'Other' (only for expenses)
-    if (type === 'expense' && name !== 'Other') {
-        newData.transactions = newData.transactions.map(t => {
-            if (t.type === 'expense' && t.category === name) {
-                return { ...t, category: 'Other' };
-            }
-            return t;
-        });
-    }
-    
-    // Filter out the category to be deleted
-    newData.categories[type] = newData.categories[type].filter(c => c !== name);
-
-    // Directly save the entire updated data object to Firestore
+    const userDocRef = doc(db, 'users', user.uid);
     try {
-        const userDocRef = doc(db, 'users', user.uid);
-        await setDoc(userDocRef, newData, { merge: true });
+      const docSnap = await getDoc(userDocRef);
+      if (!docSnap.exists()) {
+        console.error("User document does not exist.");
+        return;
+      }
+      
+      const currentData = docSnap.data() as AppData;
+      
+      // Create a deep copy to avoid mutation issues
+      const newData = JSON.parse(JSON.stringify(currentData));
+
+      // Re-assign transactions from the deleted category to 'Other'
+      if (type === 'expense' && name !== 'Other') {
+        let otherExists = newData.categories.expense.includes('Other');
+        if (!otherExists) {
+            newData.categories.expense.push('Other');
+        }
+        newData.transactions = newData.transactions.map((t: Transaction) => {
+          if (t.type === 'expense' && t.category === name) {
+            return { ...t, category: 'Other' };
+          }
+          return t;
+        });
+      }
+
+      // Filter out the category to be deleted
+      newData.categories[type] = newData.categories[type].filter((c: string) => c !== name);
+
+      // Save the entire updated data object back to Firestore
+      await setDoc(userDocRef, newData);
+
     } catch (error) {
-        console.error("Failed to delete category in Firestore", error);
+      console.error("Failed to delete category in Firestore:", error);
     }
-  }, [data, user, db]);
+  }, [user, db]);
 
 
   const exportData = useCallback(() => {
@@ -222,3 +228,5 @@ export function useData() {
 
   return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory, updateCategory, deleteCategory, exportData, resetData };
 }
+
+    
