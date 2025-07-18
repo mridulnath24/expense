@@ -171,22 +171,21 @@ export function useData() {
   }, [data, saveData]);
 
   const deleteCategory = useCallback((type: 'income' | 'expense', name: string) => {
-    const updatedCategories = {
-        ...data.categories,
-        [type]: data.categories[type].filter(c => c !== name),
+    const updatedData = { ...data };
+    
+    updatedData.categories = {
+        ...updatedData.categories,
+        [type]: updatedData.categories[type].filter(c => c !== name),
     };
     
-    const updatedTransactions = data.transactions.map(t => {
+    updatedData.transactions = updatedData.transactions.map(t => {
         if (t.type === type && t.category === name) {
             return { ...t, category: 'Other' };
         }
         return t;
     });
 
-    saveData({
-        categories: updatedCategories,
-        transactions: updatedTransactions,
-    });
+    saveData(updatedData);
   }, [data, saveData]);
 
   const exportData = useCallback(() => {
