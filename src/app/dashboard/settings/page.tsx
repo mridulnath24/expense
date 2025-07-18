@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useData } from '@/hooks/use-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,7 +56,7 @@ export default function SettingsPage() {
     },
   });
 
-  useState(() => {
+  useEffect(() => {
     if (username) {
       const nameParts = username.split(' ');
       profileForm.reset({
@@ -64,7 +64,7 @@ export default function SettingsPage() {
         lastName: nameParts.slice(1).join(' ') || '',
       });
     }
-  });
+  }, [username, profileForm]);
 
   const onProfileSubmit = async (values: ProfileFormValues) => {
     try {
@@ -99,11 +99,6 @@ export default function SettingsPage() {
   };
   
   const handleDeleteCategory = (category: Category) => {
-    const defaultCategories = ['Salary', 'Bonus', 'Gifts', 'Freelance', 'Food', 'Transport', 'Utilities', 'House Rent', 'Entertainment', 'Health', 'Shopping', 'Other', 'Grocery', 'DPS', 'EMI', 'Medical', 'Electricity Bill', 'Gas Bill', 'Wifi Bill'];
-    if (defaultCategories.includes(category.name)) {
-        alert(t('settings_deleteDefault_error'));
-        return;
-    }
     deleteCategory(category.type, category.name);
   };
 
@@ -253,6 +248,7 @@ export default function SettingsPage() {
                     />
                     </div>
                     <Button type="submit" disabled={profileForm.formState.isSubmitting}>
+                        {profileForm.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                         {t('settings_profile_button')}
                     </Button>
                 </form>
