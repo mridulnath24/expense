@@ -53,14 +53,8 @@ export function useData() {
       unsubscribe = onSnapshot(userDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const fetchedData = docSnap.data() as AppData;
-          const baseCategories = getBaseCategories('en'); // Always merge with english base
-          const mergedCategories = {
-            income: [...new Set([...baseCategories.income, ...(fetchedData.categories?.income || [])])],
-            expense: [...new Set([...baseCategories.expense, ...(fetchedData.categories?.expense || [])])],
-          };
           const sortedTransactions = (fetchedData.transactions || []).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-          const updatedData = { ...fetchedData, categories: mergedCategories, transactions: sortedTransactions };
-          setData(updatedData);
+          setData({ ...fetchedData, transactions: sortedTransactions });
         } else {
           setData(defaultData);
         }
@@ -160,49 +154,19 @@ export function useData() {
 
   }, [data, saveData]);
 
-  const deleteCategory = useCallback(async (type: 'income' | 'expense', name: string) => {
-    if (!user || !db) {
-        console.error("User not logged in or DB not available");
-        return;
-    }
-
-    const userDocRef = doc(db, 'users', user.uid);
-    try {
-        const docSnap = await getDoc(userDocRef);
-        if (!docSnap.exists()) {
-            console.error("User document does not exist.");
-            return;
-        }
-
-        const currentData = docSnap.data() as AppData;
-        
-        let transactions = currentData.transactions || [];
-        let categories = currentData.categories || { income: [], expense: [] };
-
-        if (type === 'expense' && name !== 'Other') {
-            transactions = transactions.map((t: Transaction) => {
-                if (t.type === 'expense' && t.category === name) {
-                    return { ...t, category: 'Other' };
-                }
-                return t;
-            });
-            // Ensure 'Other' exists
-            if (!categories.expense.includes('Other')) {
-                categories.expense.push('Other');
-            }
-        }
-        
-        categories[type] = categories[type].filter((c: string) => c !== name);
-
-        await setDoc(userDocRef, {
-            transactions: transactions,
-            categories: categories,
-        }, { merge: true });
-
-    } catch (error) {
-        console.error("Failed to delete category in Firestore:", error);
-    }
-  }, [user, db]);
+  const deleteCategory = useCallback((type: 'income' | 'expense', category: string) => {
+    const updatedCategories = {
+      ...data.categories,
+      [type]: data.categories[type].filter(c => c !== category),
+    };
+  
+    const updatedData = {
+      ...data,
+      categories: updatedCategories,
+    };
+  
+    saveData(updatedData);
+  }, [data, saveData]);
 
 
   const exportData = useCallback(() => {

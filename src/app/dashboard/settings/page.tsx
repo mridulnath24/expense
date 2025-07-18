@@ -49,7 +49,7 @@ export default function SettingsPage() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [addCategoryType, setAddCategoryType] = useState<'income' | 'expense'>('expense');
   
-  const defaultCategories = getBaseCategories(locale);
+  const baseCategories = getBaseCategories(locale);
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -101,16 +101,16 @@ export default function SettingsPage() {
     }
   };
   
-  const handleDeleteCategory = (category: Category) => {
-    const isDefault = defaultCategories[category.type].includes(category.name);
-    if(isDefault) {
-        toast({
-            title: t('settings_deleteDefault_error'),
-            variant: 'destructive'
-        });
+  const handleDeleteCategory = (type: 'income' | 'expense', name: string) => {
+    const isDefault = baseCategories[type].includes(name);
+
+    if (isDefault) {
+      const isConfirmed = window.confirm(`'${name}' is a default category. Are you sure you want to delete it? This might affect how transactions are grouped.`);
+      if (!isConfirmed) {
         return;
+      }
     }
-    deleteCategory(category.type, category.name);
+    deleteCategory(type, name);
   };
 
   const openAddModal = (type: 'income' | 'expense') => {
@@ -176,7 +176,7 @@ export default function SettingsPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>{t('deleteDialog_cancel')}</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteCategory(category)} className="bg-destructive hover:bg-destructive/90">
+                        <AlertDialogAction onClick={() => handleDeleteCategory(category.type, category.name)} className="bg-destructive hover:bg-destructive/90">
                           {t('deleteDialog_delete')}
                         </AlertDialogAction>
                       </AlertDialogFooter>
