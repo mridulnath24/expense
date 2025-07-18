@@ -18,6 +18,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+        // This is a workaround for a bug in Genkit with Next.js app router.
+        // It prevents the build from failing due to a module not found error.
+        config.externals.push({
+            './context-caching': 'var {}',
+        });
+    }
+    return config;
+  }
 };
 
 export default nextConfig;
