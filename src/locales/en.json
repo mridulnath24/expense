@@ -126,6 +126,10 @@
     "chart_notEnoughData_desc": "There is not enough transaction data to display a chart.",
     "reports_spendingChart_category": "Category",
     "reports_spendingChart_amount": "Amount",
+    "addCategory_title": "Add New Category",
+    "addCategory_desc": "Enter a name for the new {{type}} category.",
+    "addCategory_placeholder": "Category Name",
+    "addCategory_button": "Add Category",
     "categories_income_salary": "Salary",
     "categories_income_bonus": "Bonus",
     "categories_income_gifts": "Gifts",
@@ -146,3 +150,5 @@
     "categories_expense_gasBill": "Gas Bill",
     "categories_expense_wifiBill": "Wifi Bill"
 }
+
+    

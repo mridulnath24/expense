@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -13,6 +14,17 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -27,7 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { useData } from '@/hooks/use-data';
 import { useToast } from '@/hooks/use-toast';
@@ -52,10 +64,12 @@ interface AddTransactionDialogProps {
 }
 
 export function AddTransactionDialog({ open, onOpenChange, children, transaction }: AddTransactionDialogProps) {
-  const { data, addTransaction, updateTransaction } = useData();
+  const { data, addTransaction, updateTransaction, addCategory } = useData();
   const { toast } = useToast();
   const { t } = useLanguage();
   const isEditMode = !!transaction;
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -119,6 +133,15 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
     return translated === key ? category : translated;
   };
 
+  const handleAddCategory = () => {
+    if (newCategory.trim()) {
+      addCategory(transactionType, newCategory.trim());
+      form.setValue('category', newCategory.trim());
+      setNewCategory('');
+      setIsAddCategoryOpen(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
       onOpenChange(isOpen);
@@ -142,7 +165,12 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue('category', '');
+                      }} 
+                      value={field.value}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder={t('addTransaction_type_placeholder')} />
                       </SelectTrigger>
@@ -201,6 +229,31 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
                         ))}
                       </SelectContent>
                     </Select>
+                    <AlertDialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+                        <AlertDialogTrigger asChild>
+                            <Button type="button" variant="outline" size="icon" onClick={() => setIsAddCategoryOpen(true)}>
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>{t('addCategory_title')}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                {t('addCategory_desc', { type: t(`addTransaction_type_${transactionType}`) })}
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <Input 
+                                value={newCategory} 
+                                onChange={(e) => setNewCategory(e.target.value)} 
+                                placeholder={t('addCategory_placeholder')}
+                                autoFocus
+                            />
+                            <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setNewCategory('')}>{t('deleteDialog_cancel')}</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleAddCategory}>{t('addCategory_button')}</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -259,3 +312,5 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
     </Dialog>
   );
 }
+
+    

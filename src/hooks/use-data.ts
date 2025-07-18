@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -149,3 +150,5 @@ export function useData() {
 
   return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory };
 }
+
+    

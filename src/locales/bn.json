@@ -46,7 +46,7 @@
     "dashboard_monthlyExpenses": "মাসিক খরচ",
     "dashboard_monthlyExpenses_desc": "{{month}} মাসে",
     "dashboard_monthlyBalance": "মাসিক ব্যালেন্স",
-    "dashboard_monthlyBalance_desc": "{{month}} এর জন্য",
+    "dashboard_monthlyBalance_desc": "এর জন্য {{month}}",
     "dashboard_incomeVsExpense": "আয় বনাম খরচ",
     "dashboard_incomeVsExpense_desc": "গত ৩০ দিনে আপনার আয় এবং খরচের একটি ভিজ্যুয়াল ওভারভিউ।",
     "dashboard_expenseByCategory": "বিভাগ দ্বারা খরচ",
@@ -126,6 +126,10 @@
     "chart_notEnoughData_desc": "একটি চার্ট প্রদর্শনের জন্য পর্যাপ্ত লেনদেনের ডেটা নেই।",
     "reports_spendingChart_category": "বিভাগ",
     "reports_spendingChart_amount": "পরিমাণ",
+    "addCategory_title": "নতুন বিভাগ যোগ করুন",
+    "addCategory_desc": "নতুন {{type}} বিভাগের জন্য একটি নাম লিখুন।",
+    "addCategory_placeholder": "বিভাগের নাম",
+    "addCategory_button": "বিভাগ যোগ করুন",
     "categories_income_salary": "বেতন",
     "categories_income_bonus": "বোনাস",
     "categories_income_gifts": "উপহার",
@@ -146,3 +150,5 @@
     "categories_expense_gasBill": "গ্যাস বিল",
     "categories_expense_wifiBill": "ওয়াইফাই বিল"
 }
+
+    
