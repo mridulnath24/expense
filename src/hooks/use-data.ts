@@ -5,10 +5,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { doc, getDoc, setDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { type AppData, type Transaction } from '@/lib/types';
-import en from '@/locales/en.json';
-import bn from '@/locales/bn.json';
 
-export const getBaseCategories = (locale: string): AppData['categories'] => {
+export const getBaseCategories = (): AppData['categories'] => {
   return {
     income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
     expense: [
@@ -33,7 +31,7 @@ export const getBaseCategories = (locale: string): AppData['categories'] => {
 
 const defaultData: AppData = {
   transactions: [],
-  categories: getBaseCategories('en'),
+  categories: getBaseCategories(),
 };
 
 export function useData() {
@@ -79,7 +77,7 @@ export function useData() {
     };
   }, [user, db]);
 
-  const saveData = useCallback(async (newData: AppData) => {
+  const saveData = useCallback(async (newData: Partial<AppData>) => {
     if (user && db) {
       try {
         const userDocRef = doc(db, 'users', user.uid);
@@ -170,26 +168,31 @@ export function useData() {
 
   const deleteCategory = useCallback((type: 'income' | 'expense', categoryToDelete: string) => {
     setData(currentData => {
-        const updatedCategories = {
+        // Create a new categories object with the category removed.
+        const newCategories = {
             ...currentData.categories,
             [type]: currentData.categories[type].filter(c => c !== categoryToDelete),
         };
-        
-        // Ensure 'Other' category exists in the respective type, add if not.
-        if (!updatedCategories[type].includes('Other')) {
-            updatedCategories[type].push('Other');
+
+        // If 'Other' doesn't exist in the new list for expenses, add it.
+        // This ensures transactions have a fallback category.
+        if (type === 'expense' && !newCategories.expense.includes('Other')) {
+            newCategories.expense.push('Other');
         }
 
-        const updatedTransactions = currentData.transactions.map(t => {
+        // Create a new transactions array, re-assigning categories if necessary.
+        const newTransactions = currentData.transactions.map(t => {
             if (t.type === type && t.category === categoryToDelete) {
                 return { ...t, category: 'Other' };
             }
             return t;
         });
 
+        // Create a completely new data object to save.
         const updatedData = {
-            transactions: updatedTransactions,
-            categories: updatedCategories,
+            ...currentData,
+            transactions: newTransactions,
+            categories: newCategories,
         };
         
         saveData(updatedData);
