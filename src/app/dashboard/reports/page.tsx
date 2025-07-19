@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { DateRange } from 'react-day-picker';
 import { subDays, format, startOfMonth, endOfMonth, parse, getYear, setMonth, setYear, startOfYear, endOfYear } from 'date-fns';
 import { useData } from '@/hooks/use-data';
@@ -22,7 +23,7 @@ import { ReportsDataTable } from '@/components/reports/reports-data-table';
 import { Separator } from '@/components/ui/separator';
 
 export default function ReportsPage() {
-  const { data, loading, getTranslatedCategory } = useData();
+  const { data, loading } = useData();
   const { t } = useLanguage();
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
@@ -34,6 +35,29 @@ export default function ReportsPage() {
   const [selectedYear, setSelectedYear] = useState<string>(getYear(new Date()).toString());
   const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   
+  const getTranslatedCategory = useCallback((categoryName: string, type: 'income' | 'expense') => {
+    const originalKey = `categories_${type}_${categoryName.toLowerCase().replace(/\s+/g, '')}`;
+    let translated = t(originalKey);
+    
+    if (translated === originalKey) {
+        // try plural
+        const pluralKey = `categories_${type}_${(categoryName + 's').toLowerCase().replace(/\s+/g, '')}`;
+        translated = t(pluralKey);
+        if(translated !== pluralKey) return translated;
+
+        // try singular
+        if (categoryName.endsWith('s')) {
+          const singularKey = `categories_${type}_${(categoryName.slice(0,-1)).toLowerCase().replace(/\s+/g, '')}`;
+          translated = t(singularKey);
+          if(translated !== singularKey) return translated;
+        }
+
+        return categoryName; // Fallback to original name
+    }
+    
+    return translated;
+  }, [t]);
+
   const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
     setDateRange(newDateRange);
     if (newDateRange?.from) {

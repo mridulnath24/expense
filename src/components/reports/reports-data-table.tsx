@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -37,13 +37,34 @@ interface ReportsDataTableProps {
 }
 
 export function ReportsDataTable({ transactions }: ReportsDataTableProps) {
-  const { deleteTransaction, updateTransaction, getTranslatedCategory } = useData();
+  const { deleteTransaction, updateTransaction } = useData();
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const isMobile = useIsMobile();
+  
+  const getTranslatedCategory = useCallback((categoryName: string, type: 'income' | 'expense') => {
+    const originalKey = `categories_${type}_${categoryName.toLowerCase().replace(/\s+/g, '')}`;
+    let translated = t(originalKey);
+    
+    if (translated === originalKey) {
+        const pluralKey = `categories_${type}_${(categoryName + 's').toLowerCase().replace(/\s+/g, '')}`;
+        translated = t(pluralKey);
+        if(translated !== pluralKey) return translated;
+
+        if (categoryName.endsWith('s')) {
+          const singularKey = `categories_${type}_${(categoryName.slice(0,-1)).toLowerCase().replace(/\s+/g, '')}`;
+          translated = t(singularKey);
+          if(translated !== singularKey) return translated;
+        }
+
+        return categoryName;
+    }
+    
+    return translated;
+  }, [t]);
 
   const handleEditClick = (transaction: Transaction) => {
     setSelectedTransaction(transaction);

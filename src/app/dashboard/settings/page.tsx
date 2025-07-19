@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useData, getBaseCategories } from '@/hooks/use-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,21 +69,28 @@ export default function SettingsPage() {
     }
   }, [username, profileForm]);
 
-  const getTranslatedCategory = (categoryName: string, type: 'income' | 'expense') => {
-    const key = `categories_${type}_${categoryName.toLowerCase().replace(/\s+/g, '')}`;
-    const translated = t(key);
-    // If the key is returned, it means no translation was found. Return the original name.
-    if (translated === key) {
-       // try plural
-       const pluralKey = `categories_${type}_${(categoryName + 's').toLowerCase().replace(/\s+/g, '')}`;
-       const pluralTranslated = t(pluralKey);
-       if (pluralTranslated !== pluralKey) {
-         return pluralTranslated;
-       }
-       return categoryName;
+  const getTranslatedCategory = useCallback((categoryName: string, type: 'income' | 'expense') => {
+    const originalKey = `categories_${type}_${categoryName.toLowerCase().replace(/\s+/g, '')}`;
+    let translated = t(originalKey);
+    
+    if (translated === originalKey) {
+        // try plural
+        const pluralKey = `categories_${type}_${(categoryName + 's').toLowerCase().replace(/\s+/g, '')}`;
+        translated = t(pluralKey);
+        if(translated !== pluralKey) return translated;
+
+        // try singular
+        if (categoryName.endsWith('s')) {
+          const singularKey = `categories_${type}_${(categoryName.slice(0,-1)).toLowerCase().replace(/\s+/g, '')}`;
+          translated = t(singularKey);
+          if(translated !== singularKey) return translated;
+        }
+
+        return categoryName; // Fallback to original name
     }
+    
     return translated;
-  };
+  }, [t]);
 
   const onProfileSubmit = async (values: ProfileFormValues) => {
     try {
@@ -117,7 +125,7 @@ export default function SettingsPage() {
   };
   
   const handleDeleteCategory = (type: 'income' | 'expense', name: string) => {
-    const isDefault = baseCategories[type].includes(name) || getBaseCategories('en')[type].includes(name);
+    const isDefault = getBaseCategories('en')[type].includes(name);
 
     if (isDefault) {
        toast({

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -64,7 +64,7 @@ interface AddTransactionDialogProps {
 }
 
 export function AddTransactionDialog({ open, onOpenChange, children, transaction }: AddTransactionDialogProps) {
-  const { data, addTransaction, updateTransaction, addCategory, getTranslatedCategory } = useData();
+  const { data, addTransaction, updateTransaction, addCategory } = useData();
   const { toast } = useToast();
   const { t } = useLanguage();
   const isEditMode = !!transaction;
@@ -82,6 +82,29 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
     },
   });
   
+  const getTranslatedCategory = useCallback((categoryName: string, type: 'income' | 'expense') => {
+    const originalKey = `categories_${type}_${categoryName.toLowerCase().replace(/\s+/g, '')}`;
+    let translated = t(originalKey);
+    
+    if (translated === originalKey) {
+        // try plural
+        const pluralKey = `categories_${type}_${(categoryName + 's').toLowerCase().replace(/\s+/g, '')}`;
+        translated = t(pluralKey);
+        if(translated !== pluralKey) return translated;
+
+        // try singular
+        if (categoryName.endsWith('s')) {
+          const singularKey = `categories_${type}_${(categoryName.slice(0,-1)).toLowerCase().replace(/\s+/g, '')}`;
+          translated = t(singularKey);
+          if(translated !== singularKey) return translated;
+        }
+
+        return categoryName; // Fallback to original name
+    }
+    
+    return translated;
+  }, [t]);
+
   useEffect(() => {
     if (transaction) {
       form.reset({

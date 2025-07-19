@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Pie, PieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
 import { type Transaction } from '@/lib/types';
 import { isSameMonth, format } from 'date-fns';
@@ -10,7 +10,6 @@ import { ChartContainer } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils.tsx';
 import { PieChart as PieChartIcon } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
-import { useData } from '@/hooks/use-data';
 
 interface ExpenseByCategoryChartProps {
   transactions: Transaction[];
@@ -29,14 +28,34 @@ const COLORS = [
 
 export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartProps) {
   const { t } = useLanguage();
-  const { getTranslatedCategory } = useData();
+  
+  const getTranslatedCategory = useCallback((categoryName: string, type: 'income' | 'expense') => {
+    const originalKey = `categories_${type}_${categoryName.toLowerCase().replace(/\s+/g, '')}`;
+    let translated = t(originalKey);
+    
+    if (translated === originalKey) {
+        const pluralKey = `categories_${type}_${(categoryName + 's').toLowerCase().replace(/\s+/g, '')}`;
+        translated = t(pluralKey);
+        if(translated !== pluralKey) return translated;
+
+        if (categoryName.endsWith('s')) {
+          const singularKey = `categories_${type}_${(categoryName.slice(0,-1)).toLowerCase().replace(/\s+/g, '')}`;
+          translated = t(singularKey);
+          if(translated !== singularKey) return translated;
+        }
+
+        return categoryName;
+    }
+    
+    return translated;
+  }, [t]);
 
   const data = useMemo(() => {
     const today = new Date();
     const monthlyTransactions = transactions.filter(transaction => isSameMonth(new Date(transaction.date), today) && transaction.type === 'expense');
 
     const expenseByCategory = monthlyTransactions.reduce((acc, transaction) => {
-      const name = getTranslatedCategory(transaction.category, 'expense');
+      const name = transaction.category;
       if (!acc[name]) {
         acc[name] = { name: name, value: 0 };
       }
@@ -46,7 +65,7 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
     
     return Object.values(expenseByCategory).sort((a,b) => b.value - a.value);
 
-  }, [transactions, getTranslatedCategory]);
+  }, [transactions]);
 
   const totalExpense = useMemo(() => data.reduce((acc, item) => acc + item.value, 0), [data]);
   const monthName = format(new Date(), 'MMMM');
@@ -74,7 +93,7 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
                                 if (active && payload && payload.length) {
                                 return (
                                     <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                        <p className="font-bold">{`${payload[0].name}`}</p>
+                                        <p className="font-bold">{`${getTranslatedCategory(payload[0].name, 'expense')}`}</p>
                                         <p className="text-sm">{formatCurrency(payload[0].value as number)} ({(((payload[0].value as number) / totalExpense) * 100).toFixed(0)}%)</p>
                                     </div>
                                 );
@@ -97,11 +116,12 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
                                 const radius = innerRadius + (outerRadius - innerRadius) * 1.5;
                                 const x = cx + radius * Math.cos(-midAngle * RADIAN);
                                 const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                const translatedName = getTranslatedCategory(data[index].name, 'expense');
 
                                 return (
                                     (percent*100) > 5 ? (
                                     <text x={x} y={y} fill="hsl(var(--foreground))" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="text-xs">
-                                     {data[index].name} ({(percent * 100).toFixed(0)}%)
+                                     {translatedName} ({(percent * 100).toFixed(0)}%)
                                     </text>
                                 ) : null)
                             }}

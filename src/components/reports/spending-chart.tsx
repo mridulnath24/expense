@@ -1,13 +1,12 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { type Transaction } from '@/lib/types';
 import { ChartContainer } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils.tsx';
 import { useLanguage } from '@/context/language-context';
-import { useData } from '@/hooks/use-data';
 
 
 interface SpendingChartProps {
@@ -16,13 +15,33 @@ interface SpendingChartProps {
 
 export function SpendingChart({ transactions }: SpendingChartProps) {
   const { t } = useLanguage();
-  const { getTranslatedCategory } = useData();
+
+  const getTranslatedCategory = useCallback((categoryName: string, type: 'income' | 'expense') => {
+    const originalKey = `categories_${type}_${categoryName.toLowerCase().replace(/\s+/g, '')}`;
+    let translated = t(originalKey);
+    
+    if (translated === originalKey) {
+        const pluralKey = `categories_${type}_${(categoryName + 's').toLowerCase().replace(/\s+/g, '')}`;
+        translated = t(pluralKey);
+        if(translated !== pluralKey) return translated;
+
+        if (categoryName.endsWith('s')) {
+          const singularKey = `categories_${type}_${(categoryName.slice(0,-1)).toLowerCase().replace(/\s+/g, '')}`;
+          translated = t(singularKey);
+          if(translated !== singularKey) return translated;
+        }
+
+        return categoryName;
+    }
+    
+    return translated;
+  }, [t]);
 
   const data = useMemo(() => {
     const expenseByCategory = transactions
       .filter((transaction) => transaction.type === 'expense')
       .reduce((acc, transaction) => {
-        const name = getTranslatedCategory(transaction.category, 'expense');
+        const name = transaction.category;
         
         if (!acc[transaction.category]) {
           acc[transaction.category] = { name: name, total: 0 };
@@ -32,8 +51,9 @@ export function SpendingChart({ transactions }: SpendingChartProps) {
       }, {} as { [key: string]: { name: string; total: number } });
 
     return Object.values(expenseByCategory)
-      .sort((a, b) => b.total - a.total);
-  }, [transactions, t, getTranslatedCategory]);
+      .sort((a, b) => b.total - a.total)
+      .map(item => ({...item, name: getTranslatedCategory(item.name, 'expense')}));
+  }, [transactions, getTranslatedCategory]);
 
   return (
     <div className="h-[400px] w-full">
