@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useData } from '@/hooks/use-data';
+import { useData, getBaseCategories } from '@/hooks/use-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { getBaseCategories } from '@/hooks/use-data';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -69,6 +68,22 @@ export default function SettingsPage() {
     }
   }, [username, profileForm]);
 
+  const getTranslatedCategory = (categoryName: string, type: 'income' | 'expense') => {
+    const key = `categories_${type}_${categoryName.toLowerCase().replace(/\s+/g, '')}`;
+    const translated = t(key);
+    // If the key is returned, it means no translation was found. Return the original name.
+    if (translated === key) {
+       // try plural
+       const pluralKey = `categories_${type}_${(categoryName + 's').toLowerCase().replace(/\s+/g, '')}`;
+       const pluralTranslated = t(pluralKey);
+       if (pluralTranslated !== pluralKey) {
+         return pluralTranslated;
+       }
+       return categoryName;
+    }
+    return translated;
+  };
+
   const onProfileSubmit = async (values: ProfileFormValues) => {
     try {
       await updateUserProfile(values.firstName, values.lastName);
@@ -102,13 +117,14 @@ export default function SettingsPage() {
   };
   
   const handleDeleteCategory = (type: 'income' | 'expense', name: string) => {
-    const isDefault = baseCategories[type].includes(name);
+    const isDefault = baseCategories[type].includes(name) || getBaseCategories('en')[type].includes(name);
 
     if (isDefault) {
-      const isConfirmed = window.confirm(`'${name}' is a default category. Are you sure you want to delete it? This might affect how transactions are grouped.`);
-      if (!isConfirmed) {
-        return;
-      }
+       toast({
+        title: t('settings_deleteDefault_error'),
+        variant: "destructive",
+      });
+      return;
     }
     deleteCategory(type, name);
   };
@@ -154,7 +170,7 @@ export default function SettingsPage() {
           <div className="space-y-2">
             {categories.map((category) => (
               <div key={category.name} className="flex items-center justify-between rounded-md border p-3">
-                <span>{t(`categories_${type}_${category.name.toLowerCase().replace(/\s+/g, '')}`, { defaultValue: category.name })}</span>
+                <span>{getTranslatedCategory(category.name, category.type)}</span>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditModal(category)}>
                     <Pencil className="h-4 w-4" />
@@ -171,7 +187,7 @@ export default function SettingsPage() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>{t('deleteDialog_title')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                          {t('settings_delete_desc', { category: category.name })}
+                          {t('settings_delete_desc', { category: getTranslatedCategory(category.name, category.type) })}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

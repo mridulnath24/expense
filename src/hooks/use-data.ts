@@ -6,7 +6,17 @@ import { useAuth } from '@/context/auth-context';
 import { doc, getDoc, setDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { type AppData, type Transaction } from '@/lib/types';
 
-export const getBaseCategories = (): AppData['categories'] => {
+export const getBaseCategories = (locale: string = 'en'): AppData['categories'] => {
+  if (locale === 'bn') {
+      return {
+          income: ['বেতন', 'বোনাস', 'উপহার', 'ফ্রিল্যান্স'],
+          expense: [
+              'খাবার', 'পরিবহন', 'ইউটিলিটিস', 'বাড়ি ভাড়া', 'বিনোদন',
+              'স্বাস্থ্য', 'কেনাকাটা', 'অন্যান্য', 'মুদি', 'ডিপিএস', 'ইএমআই',
+              'মেডিকেল', 'বিদ্যুৎ বিল', 'গ্যাস বিল', 'ওয়াইফাই বিল'
+          ]
+      };
+  }
   return {
     income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
     expense: [
@@ -31,7 +41,7 @@ export const getBaseCategories = (): AppData['categories'] => {
 
 const defaultData: AppData = {
   transactions: [],
-  categories: getBaseCategories(),
+  categories: getBaseCategories('en'),
 };
 
 export function useData() {
@@ -54,7 +64,6 @@ export function useData() {
           setData({ ...fetchedData, transactions: sortedTransactions });
 
         } else {
-          // For a new user, set the default data
           setDoc(userDocRef, defaultData);
           setData(defaultData);
         }
@@ -77,11 +86,11 @@ export function useData() {
     };
   }, [user, db]);
 
-  const saveData = useCallback(async (newData: Partial<AppData>) => {
+  const saveData = useCallback(async (newData: AppData) => {
     if (user && db) {
       try {
         const userDocRef = doc(db, 'users', user.uid);
-        await setDoc(userDocRef, newData, { merge: true });
+        await setDoc(userDocRef, newData);
       } catch (error) {
         console.error("Failed to save data to Firestore", error);
       }
@@ -89,11 +98,11 @@ export function useData() {
   }, [user, db]);
 
   const addTransaction = useCallback((transaction: Omit<Transaction, 'id'>) => {
-    const newTransaction: Transaction = {
-      ...transaction,
-      id: crypto.randomUUID(),
-    };
     setData(currentData => {
+      const newTransaction: Transaction = {
+        ...transaction,
+        id: crypto.randomUUID(),
+      };
       const updatedData = {
         ...currentData,
         transactions: [newTransaction, ...currentData.transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
@@ -168,19 +177,15 @@ export function useData() {
 
   const deleteCategory = useCallback((type: 'income' | 'expense', categoryToDelete: string) => {
     setData(currentData => {
-        // Create a new categories object with the category removed.
         const newCategories = {
             ...currentData.categories,
             [type]: currentData.categories[type].filter(c => c !== categoryToDelete),
         };
 
-        // If 'Other' doesn't exist in the new list for expenses, add it.
-        // This ensures transactions have a fallback category.
         if (type === 'expense' && !newCategories.expense.includes('Other')) {
             newCategories.expense.push('Other');
         }
 
-        // Create a new transactions array, re-assigning categories if necessary.
         const newTransactions = currentData.transactions.map(t => {
             if (t.type === type && t.category === categoryToDelete) {
                 return { ...t, category: 'Other' };
@@ -188,7 +193,6 @@ export function useData() {
             return t;
         });
 
-        // Create a completely new data object to save.
         const updatedData = {
             ...currentData,
             transactions: newTransactions,
@@ -212,9 +216,12 @@ export function useData() {
     link.click();
   }, [data]);
 
-  const resetData = useCallback(() => {
-    saveData(defaultData);
-  }, [saveData]);
+  const resetData = useCallback(async () => {
+    if (user && db) {
+      await saveData(defaultData);
+      setData(defaultData);
+    }
+  }, [user, db, saveData]);
 
 
   return { data, loading, addTransaction, updateTransaction, deleteTransaction, addCategory, updateCategory, deleteCategory, exportData, resetData };
