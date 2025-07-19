@@ -9,8 +9,6 @@ import en from '@/locales/en.json';
 import bn from '@/locales/bn.json';
 
 export const getBaseCategories = (locale: string): AppData['categories'] => {
-  // This function is exported to be used in the settings page for checking default categories.
-  // Note: The category names here are the keys, not the translated values.
   return {
     income: ['Salary', 'Bonus', 'Gifts', 'Freelance'],
     expense: [
@@ -54,8 +52,12 @@ export function useData() {
         if (docSnap.exists()) {
           const fetchedData = docSnap.data() as AppData;
           const sortedTransactions = (fetchedData.transactions || []).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          
           setData({ ...fetchedData, transactions: sortedTransactions });
+
         } else {
+          // For a new user, set the default data
+          setDoc(userDocRef, defaultData);
           setData(defaultData);
         }
         setLoading(false);
@@ -80,10 +82,8 @@ export function useData() {
   const saveData = useCallback(async (newData: AppData) => {
     if (user && db) {
       try {
-        const sortedTransactions = newData.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        const dataToSave = { ...newData, transactions: sortedTransactions };
         const userDocRef = doc(db, 'users', user.uid);
-        await setDoc(userDocRef, dataToSave, { merge: true });
+        await setDoc(userDocRef, newData, { merge: true });
       } catch (error) {
         console.error("Failed to save data to Firestore", error);
       }
@@ -95,78 +95,107 @@ export function useData() {
       ...transaction,
       id: crypto.randomUUID(),
     };
-    const updatedData = {
-      ...data,
-      transactions: [newTransaction, ...data.transactions],
-    };
-    saveData(updatedData);
-  }, [data, saveData]);
+    setData(currentData => {
+      const updatedData = {
+        ...currentData,
+        transactions: [newTransaction, ...currentData.transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+      };
+      saveData(updatedData);
+      return updatedData;
+    });
+  }, [saveData]);
   
   const updateTransaction = useCallback((transaction: Transaction) => {
-    const updatedData = {
-      ...data,
-      transactions: data.transactions.map(t => t.id === transaction.id ? transaction : t),
-    };
-    saveData(updatedData);
-  }, [data, saveData]);
+    setData(currentData => {
+      const updatedData = {
+        ...currentData,
+        transactions: currentData.transactions.map(t => t.id === transaction.id ? transaction : t),
+      };
+      saveData(updatedData);
+      return updatedData;
+    });
+  }, [saveData]);
 
   const deleteTransaction = useCallback((id: string) => {
-     const updatedData = {
-       ...data,
-       transactions: data.transactions.filter(t => t.id !== id),
-     };
-     saveData(updatedData);
-  }, [data, saveData]);
+     setData(currentData => {
+       const updatedData = {
+         ...currentData,
+         transactions: currentData.transactions.filter(t => t.id !== id),
+       };
+       saveData(updatedData);
+       return updatedData;
+     });
+  }, [saveData]);
   
   const addCategory = useCallback((type: 'income' | 'expense', category: string) => {
-    if (data.categories[type].includes(category)) return;
-
-    const updatedData = {
-      ...data,
-      categories: {
-        ...data.categories,
-        [type]: [...data.categories[type], category],
-      },
-    };
-    saveData(updatedData);
-  }, [data, saveData]);
+    setData(currentData => {
+      if (currentData.categories[type].includes(category)) return currentData;
+      const updatedData = {
+        ...currentData,
+        categories: {
+          ...currentData.categories,
+          [type]: [...currentData.categories[type], category],
+        },
+      };
+      saveData(updatedData);
+      return updatedData;
+    });
+  }, [saveData]);
 
   const updateCategory = useCallback((type: 'income' | 'expense', oldName: string, newName: string) => {
-    if (oldName === newName || !oldName || !newName) return;
+    if (oldName === newName || !oldName || !newName.trim()) return;
     
-    const updatedCategories = { ...data.categories };
-    const categoryIndex = updatedCategories[type].indexOf(oldName);
-    if (categoryIndex === -1) return;
+    setData(currentData => {
+      const updatedCategories = { ...currentData.categories };
+      const categoryIndex = updatedCategories[type].indexOf(oldName);
+      if (categoryIndex === -1) return currentData;
 
-    updatedCategories[type][categoryIndex] = newName;
+      updatedCategories[type][categoryIndex] = newName.trim();
 
-    const updatedTransactions = data.transactions.map(t => {
-      if (t.type === type && t.category === oldName) {
-        return { ...t, category: newName };
-      }
-      return t;
+      const updatedTransactions = currentData.transactions.map(t => {
+        if (t.type === type && t.category === oldName) {
+          return { ...t, category: newName.trim() };
+        }
+        return t;
+      });
+
+      const updatedData = {
+        categories: updatedCategories,
+        transactions: updatedTransactions
+      };
+      saveData(updatedData);
+      return updatedData;
     });
+  }, [saveData]);
 
-    saveData({
-      categories: updatedCategories,
-      transactions: updatedTransactions
+  const deleteCategory = useCallback((type: 'income' | 'expense', categoryToDelete: string) => {
+    setData(currentData => {
+        const updatedCategories = {
+            ...currentData.categories,
+            [type]: currentData.categories[type].filter(c => c !== categoryToDelete),
+        };
+        
+        // Ensure 'Other' category exists in the respective type, add if not.
+        if (!updatedCategories[type].includes('Other')) {
+            updatedCategories[type].push('Other');
+        }
+
+        const updatedTransactions = currentData.transactions.map(t => {
+            if (t.type === type && t.category === categoryToDelete) {
+                return { ...t, category: 'Other' };
+            }
+            return t;
+        });
+
+        const updatedData = {
+            transactions: updatedTransactions,
+            categories: updatedCategories,
+        };
+        
+        saveData(updatedData);
+        return updatedData;
     });
-
-  }, [data, saveData]);
-
-  const deleteCategory = useCallback((type: 'income' | 'expense', category: string) => {
-    const updatedCategories = {
-      ...data.categories,
-      [type]: data.categories[type].filter(c => c !== category),
-    };
-  
-    const updatedData = {
-      ...data,
-      categories: updatedCategories,
-    };
-  
-    saveData(updatedData);
-  }, [data, saveData]);
+  }, [saveData]);
 
 
   const exportData = useCallback(() => {
