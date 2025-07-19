@@ -14,7 +14,7 @@ import { BarChart, FileDown, FileType, ArrowDownCircle, ArrowUpCircle, TrendingU
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils.tsx';
 import { type Transaction } from '@/lib/types';
 import { useLanguage } from '@/context/language-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

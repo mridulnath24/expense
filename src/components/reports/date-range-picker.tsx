@@ -1,10 +1,11 @@
+
 'use client';
 
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
-import { cn } from '@/lib/utils.tsx';
+import { cn } from '@/lib/utils.ts';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {

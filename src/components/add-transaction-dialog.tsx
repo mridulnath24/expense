@@ -38,7 +38,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils.tsx';
+import { cn } from '@/lib/utils.ts';
 import { CalendarIcon, Loader2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { useData } from '@/hooks/use-data';
@@ -64,7 +64,7 @@ interface AddTransactionDialogProps {
 }
 
 export function AddTransactionDialog({ open, onOpenChange, children, transaction }: AddTransactionDialogProps) {
-  const { data, addTransaction, updateTransaction, addCategory } = useData();
+  const { data, addTransaction, updateTransaction, addCategory, getTranslatedCategory } = useData();
   const { toast } = useToast();
   const { t } = useLanguage();
   const isEditMode = !!transaction;
@@ -125,12 +125,6 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
     }
 
     onOpenChange(false);
-  };
-  
-  const getTranslatedCategory = (category: string, type: 'income' | 'expense') => {
-    const key = `categories_${type}_${category.toLowerCase().replace(/\s+/g, '')}`;
-    const translated = t(key);
-    return translated === key ? category : translated;
   };
 
   const handleAddCategory = () => {
