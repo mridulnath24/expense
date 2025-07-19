@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowDownCircle, ArrowUpCircle, TrendingUp } from 'lucide-react';
 import { type Transaction } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils.tsx';
 import { isSameMonth, format } from 'date-fns';
 import { useLanguage } from '@/context/language-context';
 

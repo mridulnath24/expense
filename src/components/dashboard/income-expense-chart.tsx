@@ -6,7 +6,7 @@ import { type Transaction } from '@/lib/types';
 import { format, subDays, isAfter } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer } from '@/components/ui/chart';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils.tsx';
 import { TrendingUp } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 
@@ -51,6 +51,16 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
 
   }, [transactions]);
 
+  const yAxisTickFormatter = (value: number) => {
+    const formatted = formatCurrency(value);
+    if (typeof formatted === 'string') {
+        return formatted;
+    }
+    // This is a fallback for the JSX element case. It won't render the JSX but will avoid crashing.
+    // A better approach would be to customize the tick rendering if complex elements are needed.
+    return `৳${value.toFixed(0)}`;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -91,7 +101,7 @@ export function IncomeExpenseChart({ transactions }: IncomeExpenseChartProps) {
                         fontSize={12} 
                         tickLine={false} 
                         axisLine={false} 
-                        tickFormatter={(value) => formatCurrency(value as number)}
+                        tickFormatter={yAxisTickFormatter}
                         domain={yAxisDomain}
                         ticks={yAxisTicks}
                         width={80}

@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowDownCircle, ArrowUpCircle, DollarSign } from 'lucide-react';
 import { type Transaction } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils.tsx';
 import { useLanguage } from '@/context/language-context';
 
 interface SummaryCardsProps {

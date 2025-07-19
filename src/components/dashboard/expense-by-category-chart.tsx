@@ -6,9 +6,10 @@ import { type Transaction } from '@/lib/types';
 import { isSameMonth, format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer } from '@/components/ui/chart';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils.tsx';
 import { PieChart as PieChartIcon } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
+import { useData } from '@/hooks/use-data';
 
 interface ExpenseByCategoryChartProps {
   transactions: Transaction[];
@@ -27,14 +28,14 @@ const COLORS = [
 
 export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartProps) {
   const { t } = useLanguage();
+  const { getTranslatedCategory } = useData();
+
   const data = useMemo(() => {
     const today = new Date();
     const monthlyTransactions = transactions.filter(transaction => isSameMonth(new Date(transaction.date), today) && transaction.type === 'expense');
 
     const expenseByCategory = monthlyTransactions.reduce((acc, transaction) => {
-      const categoryKey = `categories_expense_${transaction.category.toLowerCase().replace(/\s+/g, '')}`;
-      const translatedCategory = t(categoryKey);
-      const name = translatedCategory === categoryKey ? transaction.category : translatedCategory;
+      const name = getTranslatedCategory(transaction.category, 'expense');
       if (!acc[name]) {
         acc[name] = { name: name, value: 0 };
       }
@@ -44,7 +45,7 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
     
     return Object.values(expenseByCategory).sort((a,b) => b.value - a.value);
 
-  }, [transactions, t]);
+  }, [transactions, getTranslatedCategory]);
 
   const totalExpense = useMemo(() => data.reduce((acc, item) => acc + item.value, 0), [data]);
   const monthName = format(new Date(), 'MMMM');
@@ -73,7 +74,7 @@ export function ExpenseByCategoryChart({ transactions }: ExpenseByCategoryChartP
                                 return (
                                     <div className="rounded-lg border bg-background p-2 shadow-sm">
                                         <p className="font-bold">{`${payload[0].name}`}</p>
-                                        <p className="text-sm">{`${formatCurrency(payload[0].value as number)} (${(((payload[0].value as number) / totalExpense) * 100).toFixed(0)}%)`}</p>
+                                        <p className="text-sm">{formatCurrency(payload[0].value as number)} ({(((payload[0].value as number) / totalExpense) * 100).toFixed(0)}%)</p>
                                     </div>
                                 );
                                 }

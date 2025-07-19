@@ -10,6 +10,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        sans: ['"Noto Sans Bengali"', 'Inter', 'Hind Siliguri', 'sans-serif'],
         body: ['Inter', 'Hind Siliguri', 'sans-serif'],
         bengali: ['"Noto Sans Bengali"', 'Hind Siliguri', 'sans-serif'],
         headline: ['Inter', 'Hind Siliguri', 'sans-serif'],

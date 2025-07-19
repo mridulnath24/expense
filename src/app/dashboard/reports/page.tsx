@@ -22,7 +22,7 @@ import { ReportsDataTable } from '@/components/reports/reports-data-table';
 import { Separator } from '@/components/ui/separator';
 
 export default function ReportsPage() {
-  const { data, loading } = useData();
+  const { data, loading, getTranslatedCategory } = useData();
   const { t } = useLanguage();
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
@@ -149,14 +149,14 @@ export default function ReportsPage() {
     setCategoryFilter('all'); // Reset category filter when type changes
   };
 
-  const getTranslatedCategory = (category: string) => {
-    const incomeKey = `categories_income_${category.toLowerCase().replace(/\s+/g, '')}`;
-    const expenseKey = `categories_expense_${category.toLowerCase().replace(/\s+/g, '')}`;
-    const translatedIncome = t(incomeKey);
-    const translatedExpense = t(expenseKey);
-    if(translatedIncome !== incomeKey) return translatedIncome;
-    if(translatedExpense !== expenseKey) return translatedExpense;
-    return category;
+  const getFullTranslatedCategory = (category: string) => {
+    const translatedIncome = getTranslatedCategory(category, 'income');
+    if (translatedIncome !== category) return translatedIncome;
+
+    const translatedExpense = getTranslatedCategory(category, 'expense');
+    if (translatedExpense !== category) return translatedExpense;
+    
+    return category; // fallback
   };
 
   const generatePDF = () => {
@@ -170,9 +170,9 @@ export default function ReportsPage() {
       const transactionData = [
         format(new Date(transaction.date), "yyyy-MM-dd"),
         transaction.description,
-        getTranslatedCategory(transaction.category),
+        getTranslatedCategory(transaction.category, transaction.type),
         t(`addTransaction_type_${transaction.type}`),
-        formatCurrency(transaction.amount),
+        (formatCurrency(transaction.amount) as React.ReactElement).props.children,
       ];
       tableRows.push(transactionData);
     });
@@ -194,9 +194,9 @@ export default function ReportsPage() {
     
     const finalY = (doc as any).lastAutoTable.finalY;
     doc.setFontSize(12);
-    doc.text(`${t('dashboard_totalIncome')}: ${formatCurrency(totalIncome)}`, 14, finalY + 10);
-    doc.text(`${t('dashboard_totalExpenses')}: ${formatCurrency(totalExpense)}`, 14, finalY + 17);
-    doc.text(`${t('dashboard_currentBalance')}: ${formatCurrency(totalIncome - totalExpense)}`, 14, finalY + 24);
+    doc.text(`${t('dashboard_totalIncome')}: ${(formatCurrency(totalIncome) as React.ReactElement).props.children}`, 14, finalY + 10);
+    doc.text(`${t('dashboard_totalExpenses')}: ${(formatCurrency(totalExpense) as React.ReactElement).props.children}`, 14, finalY + 17);
+    doc.text(`${t('dashboard_currentBalance')}: ${(formatCurrency(totalIncome - totalExpense) as React.ReactElement).props.children}`, 14, finalY + 24);
 
     doc.save(`report_${dateFrom}_-_${dateTo}.pdf`);
   };
@@ -205,7 +205,7 @@ export default function ReportsPage() {
     const worksheetData = filteredTransactions.map(transaction => ({
         [t('transactionTable_col_date')]: format(new Date(transaction.date), "yyyy-MM-dd"),
         [t('transactionTable_col_description')]: transaction.description,
-        [t('transactionTable_col_category')]: getTranslatedCategory(transaction.category),
+        [t('transactionTable_col_category')]: getTranslatedCategory(transaction.category, transaction.type),
         [t('reports_col_type')]: transaction.type,
         [t('transactionTable_col_amount')]: transaction.amount,
     }));
@@ -314,7 +314,7 @@ export default function ReportsPage() {
                         <SelectContent>
                             <SelectItem value="all">{t('reports_filter_category_all')}</SelectItem>
                             {availableCategories.slice(1).map(cat => (
-                                <SelectItem key={cat} value={cat}>{getTranslatedCategory(cat)}</SelectItem>
+                                <SelectItem key={cat} value={cat}>{getFullTranslatedCategory(cat)}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>

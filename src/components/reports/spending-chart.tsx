@@ -4,8 +4,9 @@ import { useMemo } from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { type Transaction } from '@/lib/types';
 import { ChartContainer } from '@/components/ui/chart';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils.tsx';
 import { useLanguage } from '@/context/language-context';
+import { useData } from '@/hooks/use-data';
 
 
 interface SpendingChartProps {
@@ -14,16 +15,16 @@ interface SpendingChartProps {
 
 export function SpendingChart({ transactions }: SpendingChartProps) {
   const { t } = useLanguage();
+  const { getTranslatedCategory } = useData();
 
   const data = useMemo(() => {
     const expenseByCategory = transactions
       .filter((transaction) => transaction.type === 'expense')
       .reduce((acc, transaction) => {
-        const categoryKey = `categories_expense_${transaction.category.toLowerCase().replace(/\s+/g, '')}`;
-        const translatedCategory = t(categoryKey);
+        const name = getTranslatedCategory(transaction.category, 'expense');
         
         if (!acc[transaction.category]) {
-          acc[transaction.category] = { name: translatedCategory, total: 0 };
+          acc[transaction.category] = { name: name, total: 0 };
         }
         acc[transaction.category].total += transaction.amount;
         return acc;
@@ -31,7 +32,7 @@ export function SpendingChart({ transactions }: SpendingChartProps) {
 
     return Object.values(expenseByCategory)
       .sort((a, b) => b.total - a.total);
-  }, [transactions, t]);
+  }, [transactions, t, getTranslatedCategory]);
 
   return (
     <div className="h-[400px] w-full">

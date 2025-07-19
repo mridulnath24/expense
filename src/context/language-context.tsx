@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import { setCookie, parseCookies } from 'nookies';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.tsx';
 
 import en from '@/locales/en.json';
 import bn from '@/locales/bn.json';

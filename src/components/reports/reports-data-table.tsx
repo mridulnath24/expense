@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { type Transaction } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils.tsx';
 import { format } from 'date-fns';
 import { MoreHorizontal, Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
 import { useData } from '@/hooks/use-data';
@@ -37,7 +37,7 @@ interface ReportsDataTableProps {
 }
 
 export function ReportsDataTable({ transactions }: ReportsDataTableProps) {
-  const { deleteTransaction, updateTransaction } = useData();
+  const { deleteTransaction, updateTransaction, getTranslatedCategory } = useData();
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -66,12 +66,6 @@ export function ReportsDataTable({ transactions }: ReportsDataTableProps) {
     setIsDeleteDialogOpen(false);
     setSelectedTransaction(null);
   };
-
-  const getTranslatedCategory = (category: string, type: 'income' | 'expense') => {
-    const key = `categories_${type}_${category.toLowerCase().replace(/\s+/g, '')}`;
-    const translated = t(key);
-    return translated === key ? category : translated;
-  };
   
   const renderMobileView = () => (
     <div className="space-y-3">
@@ -86,10 +80,10 @@ export function ReportsDataTable({ transactions }: ReportsDataTableProps) {
                          <p className="text-sm text-muted-foreground">{format(new Date(transaction.date), 'PP')}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                         <p className={`font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                         <div className={`font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                            {transaction.type === 'income' ? '+' : '-'}
                            {formatCurrency(transaction.amount)}
-                        </p>
+                        </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-8 w-8 p-0">
@@ -147,8 +141,10 @@ export function ReportsDataTable({ transactions }: ReportsDataTableProps) {
                 transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
               }`}
             >
-              {transaction.type === 'income' ? '+' : '-'}
-              {formatCurrency(transaction.amount)}
+              <div className="flex items-center justify-end">
+                <span>{transaction.type === 'income' ? '+' : '-'}</span>
+                {formatCurrency(transaction.amount)}
+              </div>
             </TableCell>
             <TableCell>
               <DropdownMenu>

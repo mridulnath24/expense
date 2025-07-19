@@ -38,7 +38,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.tsx';
 import { CalendarIcon, Loader2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { useData } from '@/hooks/use-data';
@@ -312,5 +312,3 @@ export function AddTransactionDialog({ open, onOpenChange, children, transaction
     </Dialog>
   );
 }
-
-    
