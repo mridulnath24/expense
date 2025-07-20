@@ -183,9 +183,17 @@ export default function ReportsPage() {
     return category; // fallback
   };
 
+  const formatCurrencyForPdf = (amount: number) => {
+    return '৳' + new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
   const generatePDF = () => {
     const doc = new jsPDF();
-    doc.setFont('helvetica', 'normal');
+    doc.addFont('/fonts/NotoSansBengali-Regular.ttf', 'NotoSansBengali', 'normal');
+    doc.setFont('NotoSansBengali', 'normal');
 
     const tableColumn = [t('transactionTable_col_date'), t('transactionTable_col_description'), t('transactionTable_col_category'), t('reports_col_type'), t('transactionTable_col_amount')];
     const tableRows: (string | number)[][] = [];
@@ -196,7 +204,7 @@ export default function ReportsPage() {
         transaction.description,
         getTranslatedCategory(transaction.category, transaction.type),
         t(`addTransaction_type_${transaction.type}`),
-        (formatCurrency(transaction.amount) as React.ReactElement).props.children,
+        formatCurrencyForPdf(transaction.amount)
       ];
       tableRows.push(transactionData);
     });
@@ -213,14 +221,14 @@ export default function ReportsPage() {
         head: [tableColumn],
         body: tableRows,
         startY: 50,
-        styles: { font: "helvetica", fontStyle: 'normal' }
+        styles: { font: "NotoSansBengali", fontStyle: 'normal' }
     });
     
     const finalY = (doc as any).lastAutoTable.finalY;
     doc.setFontSize(12);
-    doc.text(`${t('dashboard_totalIncome')}: ${(formatCurrency(totalIncome) as React.ReactElement).props.children}`, 14, finalY + 10);
-    doc.text(`${t('dashboard_totalExpenses')}: ${(formatCurrency(totalExpense) as React.ReactElement).props.children}`, 14, finalY + 17);
-    doc.text(`${t('dashboard_currentBalance')}: ${(formatCurrency(totalIncome - totalExpense) as React.ReactElement).props.children}`, 14, finalY + 24);
+    doc.text(`${t('dashboard_totalIncome')}: ${formatCurrencyForPdf(totalIncome)}`, 14, finalY + 10);
+    doc.text(`${t('dashboard_totalExpenses')}: ${formatCurrencyForPdf(totalExpense)}`, 14, finalY + 17);
+    doc.text(`${t('dashboard_currentBalance')}: ${formatCurrencyForPdf(totalIncome - totalExpense)}`, 14, finalY + 24);
 
     doc.save(`report_${dateFrom}_-_${dateTo}.pdf`);
   };
