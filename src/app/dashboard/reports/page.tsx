@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
@@ -21,6 +19,7 @@ import { useLanguage } from '@/context/language-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ReportsDataTable } from '@/components/reports/reports-data-table';
 import { Separator } from '@/components/ui/separator';
+import { NotoSansBengali } from '@/lib/fonts/noto-sans-bengali-font';
 
 export default function ReportsPage() {
   const { data, loading } = useData();
@@ -192,8 +191,10 @@ export default function ReportsPage() {
 
   const generatePDF = () => {
     const doc = new jsPDF();
-    doc.addFont('/fonts/NotoSansBengali-Regular.ttf', 'NotoSansBengali', 'normal');
-    doc.setFont('NotoSansBengali', 'normal');
+    doc.addFileToVFS("NotoSansBengali-Regular.ttf", NotoSansBengali);
+    doc.addFont("NotoSansBengali-Regular.ttf", "NotoSansBengali", "normal");
+    doc.setFont("NotoSansBengali");
+
 
     const tableColumn = [t('transactionTable_col_date'), t('transactionTable_col_description'), t('transactionTable_col_category'), t('reports_col_type'), t('transactionTable_col_amount')];
     const tableRows: (string | number)[][] = [];
@@ -217,7 +218,7 @@ export default function ReportsPage() {
     doc.setFontSize(12);
     doc.text(`${t('reports_dateRange')}: ${dateFrom} to ${dateTo}`, 14, 30);
     
-    doc.autoTable({
+    (doc as any).autoTable({
         head: [tableColumn],
         body: tableRows,
         startY: 50,
